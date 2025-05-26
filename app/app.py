@@ -16,6 +16,7 @@ def timeline():
     # Get timeline entries for this range
     entries = database.get_timeline_data(start_date.isoformat(), end_date.isoformat())
     entry_types = database.get_entry_types()
+    mood_options = database.get_mood_options()
     
     # Organize entries by date and hour
     timeline_data = {}
@@ -53,7 +54,8 @@ def timeline():
     return render_template('timeline.html', 
                          timeline_data=timeline_data,
                          date_range=date_range,
-                         entry_types=entry_types)
+                         entry_types=entry_types,
+                         mood_options=mood_options)
 
 @app.route('/api/add_entry', methods=['POST'])
 def add_entry():
@@ -188,19 +190,20 @@ def load_timeline():
     try:
         entries = database.get_timeline_data(start_date, end_date)
         entry_types = database.get_entry_types()
-        
+        mood_options = database.get_mood_options()
+            
         # Organize entries by date and hour
         timeline_data = {}
         for entry in entries:
             entry_datetime = datetime.fromisoformat(entry['datetime'])
             date_key = entry_datetime.date().isoformat()
             hour_key = entry_datetime.hour
-            
+                
             if date_key not in timeline_data:
                 timeline_data[date_key] = {}
             if hour_key not in timeline_data[date_key]:
                 timeline_data[date_key][hour_key] = []
-                
+                    
             timeline_data[date_key][hour_key].append({
                 'type': entry['entry_type'],
                 'display_name': entry['display_name'],
@@ -210,10 +213,11 @@ def load_timeline():
                 'text_value': entry['text_value'],
                 'notes': entry['notes']
             })
-        
+            
         return jsonify({
             'timeline_data': timeline_data,
-            'entry_types': [dict(et) for et in entry_types]
+            'entry_types': [dict(et) for et in entry_types],
+            'mood_options': mood_options
         })
     
     except Exception as e:
@@ -256,4 +260,5 @@ def submit():
 
 if __name__ == '__main__':
     database.init_db()  # Initialize the database on startup
+    database.update_entry_types_for_integers()  # Update existing entry types
     app.run(host='0.0.0.0', port=8080, debug=True)

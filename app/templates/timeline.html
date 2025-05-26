@@ -19,12 +19,19 @@
     <div class="container">
       <div class="header">
         <h1>🌟 Your Health Timeline</h1>
-        <p>Track your daily wellness by adding entries to any hour of any day. Build your health story one moment at a time.</p>
-        
+        <p>
+          Track your daily wellness by adding entries to any hour of any day.
+          Build your health story one moment at a time.
+        </p>
+
         <div class="nav-buttons">
-          <a href="{{ url_for('view_entries') }}" class="nav-btn">📊 View Summary</a>
+          <a href="{{ url_for('view_entries') }}" class="nav-btn"
+            >📊 View Summary</a
+          >
           <button class="nav-btn" onclick="goToToday()">🎯 Go to Today</button>
-          <button class="nav-btn" onclick="loadMoreDays()">📅 Load More Days</button>
+          <button class="nav-btn" onclick="loadMoreDays()">
+            📅 Load More Days
+          </button>
         </div>
       </div>
 
@@ -46,7 +53,11 @@
               {% for day in date_range %}
               <div class="day-header {{ 'today' if day.is_today else '' }}">
                 <div>{{ day.display }}</div>
-                <div style="font-size: 0.8rem; font-weight: normal; opacity: 0.8;">{{ day.date }}</div>
+                <div
+                  style="font-size: 0.8rem; font-weight: normal; opacity: 0.8"
+                >
+                  {{ day.date }}
+                </div>
               </div>
               {% endfor %}
             </div>
@@ -55,31 +66,43 @@
               {% for day in date_range %}
               <div class="day-column" data-date="{{ day.date }}">
                 {% for hour in range(24) %}
-                <div class="hour-slot" 
-                     data-date="{{ day.date }}" 
-                     data-hour="{{ hour }}"
-                     onclick="openEntryModal('{{ day.date }}', {{ hour }})"
-                     {% if timeline_data.get(day.date, {}).get(hour) %}class="has-entries"{% endif %}>
-                  
-                  {% if timeline_data.get(day.date, {}).get(hour) %}
-                    {% for entry in timeline_data[day.date][hour] %}
-                    <div class="entry-chip {{ entry.type }}" 
-                         title="{{ entry.display_name }}: {{ entry.numeric_value or entry.text_value or 'Yes' }}{% if entry.notes %} - {{ entry.notes }}{% endif %}">
-                      <span class="emoji">{{ entry.emoji }}</span>
-                      <span class="value">
-                        {% if entry.value_type == 'numeric' %}
-                          {{ entry.numeric_value }}
-                        {% elif entry.value_type == 'text' %}
-                          {{ entry.text_value[:10] }}{% if entry.text_value|length > 10 %}...{% endif %}
-                        {% else %}
-                          ✓
-                        {% endif %}
-                      </span>
-                    </div>
-                    {% endfor %}
-                  {% endif %}
-                  
-                  <button class="add-entry-btn" onclick="event.stopPropagation(); openEntryModal('{{ day.date }}', {{ hour }})">+</button>
+                <div
+                  class="hour-slot"
+                  data-date="{{ day.date }}"
+                  data-hour="{{ hour }}"
+                  onclick="openEntryModal('{{ day.date }}', {{ hour }})"
+                  {%
+                  if
+                  timeline_data.get(day.date,
+                  {}).get(hour)
+                  %}class="has-entries"
+                  {%
+                  endif
+                  %}
+                >
+                  {% if timeline_data.get(day.date, {}).get(hour) %} {% for
+                  entry in timeline_data[day.date][hour] %}
+                  <div
+                    class="entry-chip {{ entry.type }}"
+                    title="{{ entry.display_name }}: {{ entry.numeric_value or entry.text_value or 'Yes' }}{% if entry.notes %} - {{ entry.notes }}{% endif %}"
+                  >
+                    <span class="emoji">{{ entry.emoji }}</span>
+                    <span class="value">
+                      {% if entry.value_type == 'numeric' %} {{
+                      entry.numeric_value }} {% elif entry.value_type == 'text'
+                      %} {{ entry.text_value[:10] }}{% if
+                      entry.text_value|length > 10 %}...{% endif %} {% else %} ✓
+                      {% endif %}
+                    </span>
+                  </div>
+                  {% endfor %} {% endif %}
+
+                  <button
+                    class="add-entry-btn"
+                    onclick="event.stopPropagation(); openEntryModal('{{ day.date }}', {{ hour }})"
+                  >
+                    +
+                  </button>
                 </div>
                 {% endfor %}
               </div>
@@ -98,7 +121,11 @@
           <button class="close-btn" onclick="closeEntryModal()">&times;</button>
         </div>
 
-        <div id="existingEntries" class="existing-entries" style="display: none;">
+        <div
+          id="existingEntries"
+          class="existing-entries"
+          style="display: none"
+        >
           <h4>Existing Entries:</h4>
           <div id="entriesList"></div>
         </div>
@@ -106,38 +133,80 @@
         <form id="entryForm">
           <div class="form-group">
             <label class="form-label">Entry Type</label>
-            <select id="entryType" class="form-select" onchange="updateFormFields()">
+            <select
+              id="entryType"
+              class="form-select"
+              onchange="updateFormFields()"
+            >
               <option value="">Select entry type...</option>
               {% for entry_type in entry_types %}
-              <option value="{{ entry_type.type_name }}" 
-                      data-value-type="{{ entry_type.value_type }}"
-                      data-min="{{ entry_type.min_value or '' }}"
-                      data-max="{{ entry_type.max_value or '' }}"
-                      data-description="{{ entry_type.description }}">
+              <option
+                value="{{ entry_type.type_name }}"
+                data-value-type="{{ entry_type.value_type }}"
+                data-min="{{ entry_type.min_value or '' }}"
+                data-max="{{ entry_type.max_value or '' }}"
+                data-default-value="{{ entry_type.default_value or '' }}"
+                data-description="{{ entry_type.description }}"
+              >
                 {{ entry_type.emoji }} {{ entry_type.display_name }}
               </option>
               {% endfor %}
             </select>
           </div>
 
-          <div id="numericField" class="form-group" style="display: none;">
+          <div id="numericField" class="form-group" style="display: none">
             <label class="form-label" id="numericLabel">Value</label>
-            <input type="number" id="numericValue" class="form-control" step="0.1">
-            <small id="numericHelp" style="color: var(--text-secondary);"></small>
+            <input
+              type="number"
+              id="numericValue"
+              class="form-control"
+              step="1"
+              min="0"
+            />
+            <small
+              id="numericHelp"
+              style="color: var(--text-secondary)"
+            ></small>
           </div>
 
-          <div id="textField" class="form-group" style="display: none;">
+          <div id="moodField" class="form-group" style="display: none">
+            <label class="form-label">How are you feeling?</label>
+            <select id="moodValue" class="form-select">
+              <option value="">Select your mood...</option>
+              {% for mood in mood_options %}
+              <option value="{{ mood['value'] }}" {% if mood['value'] == 3 %}selected{% endif %}>
+                {{ mood['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >Choose the option that best describes your current mood</small
+            >
+          </div>
+
+          <div id="textField" class="form-group" style="display: none">
             <label class="form-label" id="textLabel">Description</label>
-            <input type="text" id="textValue" class="form-control">
+            <input type="text" id="textValue" class="form-control" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Notes (Optional)</label>
-            <textarea id="notes" class="form-control" rows="3" placeholder="Any additional notes..."></textarea>
+            <textarea
+              id="notes"
+              class="form-control"
+              rows="3"
+              placeholder="Any additional notes..."
+            ></textarea>
           </div>
 
           <div class="btn-group">
-            <button type="button" class="btn btn-secondary" onclick="closeEntryModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeEntryModal()"
+            >
+              Cancel
+            </button>
             <button type="submit" class="btn btn-primary">Add Entry</button>
           </div>
         </form>
@@ -145,46 +214,52 @@
     </div>
 
     <script>
-      let currentDate = '';
+      let currentDate = "";
       let currentHour = 0;
       let currentEntries = [];
 
       function openEntryModal(date, hour) {
         currentDate = date;
         currentHour = hour;
-        
-        document.getElementById('modalTitle').textContent = `Add Entry - ${date} ${hour.toString().padStart(2, '0')}:00`;
-        
+
+        document.getElementById("modalTitle").textContent =
+          `Add Entry - ${date} ${hour.toString().padStart(2, "0")}:00`;
+
         // Load existing entries for this time slot
         loadExistingEntries(date, hour);
-        
+
         // Reset form
-        document.getElementById('entryForm').reset();
+        document.getElementById("entryForm").reset();
         updateFormFields();
-        
-        document.getElementById('entryModal').style.display = 'block';
+
+        // Set focus to entry type dropdown for better UX
+        document.getElementById("entryType").focus();
+
+        document.getElementById("entryModal").style.display = "block";
       }
 
       function closeEntryModal() {
-        document.getElementById('entryModal').style.display = 'none';
+        document.getElementById("entryModal").style.display = "none";
       }
 
       function loadExistingEntries(date, hour) {
         // Find existing entries from the timeline data
-        const hourSlot = document.querySelector(`[data-date="${date}"][data-hour="${hour}"]`);
-        const entries = hourSlot.querySelectorAll('.entry-chip');
-        
+        const hourSlot = document.querySelector(
+          `[data-date="${date}"][data-hour="${hour}"]`,
+        );
+        const entries = hourSlot.querySelectorAll(".entry-chip");
+
         if (entries.length > 0) {
-          document.getElementById('existingEntries').style.display = 'block';
-          const entriesList = document.getElementById('entriesList');
-          entriesList.innerHTML = '';
-          
+          document.getElementById("existingEntries").style.display = "block";
+          const entriesList = document.getElementById("entriesList");
+          entriesList.innerHTML = "";
+
           entries.forEach((entry, index) => {
-            const entryDiv = document.createElement('div');
-            entryDiv.className = 'existing-entry';
+            const entryDiv = document.createElement("div");
+            entryDiv.className = "existing-entry";
             entryDiv.innerHTML = `
               <div class="entry-info">
-                <span>${entry.querySelector('.emoji').textContent}</span>
+                <span>${entry.querySelector(".emoji").textContent}</span>
                 <span>${entry.title}</span>
               </div>
               <button class="delete-entry-btn" onclick="deleteEntry('${date}', ${hour}, '${entry.classList[1]}')">Delete</button>
@@ -192,17 +267,18 @@
             entriesList.appendChild(entryDiv);
           });
         } else {
-          document.getElementById('existingEntries').style.display = 'none';
+          document.getElementById("existingEntries").style.display = "none";
         }
       }
 
       function updateFormFields() {
-        const entryType = document.getElementById('entryType');
+        const entryType = document.getElementById("entryType");
         const selectedOption = entryType.options[entryType.selectedIndex];
-        
+
         if (!selectedOption.value) {
-          document.getElementById('numericField').style.display = 'none';
-          document.getElementById('textField').style.display = 'none';
+          document.getElementById("numericField").style.display = "none";
+          document.getElementById("moodField").style.display = "none";
+          document.getElementById("textField").style.display = "none";
           return;
         }
 
@@ -210,142 +286,172 @@
         const min = selectedOption.dataset.min;
         const max = selectedOption.dataset.max;
         const description = selectedOption.dataset.description;
+        const defaultValue = selectedOption.dataset.defaultValue;
 
         // Hide all fields first
-        document.getElementById('numericField').style.display = 'none';
-        document.getElementById('textField').style.display = 'none';
+        document.getElementById("numericField").style.display = "none";
+        document.getElementById("moodField").style.display = "none";
+        document.getElementById("textField").style.display = "none";
 
-        if (valueType === 'numeric') {
-          document.getElementById('numericField').style.display = 'block';
-          document.getElementById('numericLabel').textContent = selectedOption.textContent.split(' ').slice(1).join(' ');
-          
-          const numericInput = document.getElementById('numericValue');
+        if (valueType === "mood_select") {
+          document.getElementById("moodField").style.display = "block";
+          // Set default mood value if specified
+          if (defaultValue) {
+            document.getElementById("moodValue").value = defaultValue;
+          }
+        } else if (valueType === "numeric") {
+          document.getElementById("numericField").style.display = "block";
+          document.getElementById("numericLabel").textContent =
+            selectedOption.textContent.split(" ").slice(1).join(" ");
+
+          const numericInput = document.getElementById("numericValue");
           if (min) numericInput.min = min;
           if (max) numericInput.max = max;
-          
+
+          // Set default value for numeric inputs
+          if (defaultValue) {
+            numericInput.value = defaultValue;
+          }
+
           let helpText = description;
           if (min && max) {
             helpText += ` (Range: ${min}-${max})`;
           }
-          document.getElementById('numericHelp').textContent = helpText;
-        } else if (valueType === 'text') {
-          document.getElementById('textField').style.display = 'block';
-          document.getElementById('textLabel').textContent = selectedOption.textContent.split(' ').slice(1).join(' ');
+          document.getElementById("numericHelp").textContent = helpText;
+        } else if (valueType === "text") {
+          document.getElementById("textField").style.display = "block";
+          document.getElementById("textLabel").textContent =
+            selectedOption.textContent.split(" ").slice(1).join(" ");
+
+          // Set default value for text inputs if specified
+          if (defaultValue) {
+            document.getElementById("textValue").value = defaultValue;
+          }
         }
       }
 
-      document.getElementById('entryForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const entryType = document.getElementById('entryType').value;
-        if (!entryType) {
-          alert('Please select an entry type');
-          return;
-        }
+      document
+        .getElementById("entryForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-        const selectedOption = document.getElementById('entryType').options[document.getElementById('entryType').selectedIndex];
-        const valueType = selectedOption.dataset.valueType;
-        
-        const data = {
-          date: currentDate,
-          hour: currentHour,
-          entry_type: entryType,
-          notes: document.getElementById('notes').value
-        };
-
-        if (valueType === 'numeric') {
-          const numericValue = document.getElementById('numericValue').value;
-          if (numericValue) {
-            data.numeric_value = parseFloat(numericValue);
+          const entryType = document.getElementById("entryType").value;
+          if (!entryType) {
+            alert("Please select an entry type");
+            return;
           }
-        } else if (valueType === 'text') {
-          data.text_value = document.getElementById('textValue').value;
-        } else {
-          data.numeric_value = 1; // Boolean entries
-        }
 
-        try {
-          const response = await fetch('/api/add_entry', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-          });
+          const selectedOption =
+            document.getElementById("entryType").options[
+              document.getElementById("entryType").selectedIndex
+            ];
+          const valueType = selectedOption.dataset.valueType;
 
-          const result = await response.json();
-          
-          if (result.success) {
-            closeEntryModal();
-            location.reload(); // Simple reload for now
+          const data = {
+            date: currentDate,
+            hour: currentHour,
+            entry_type: entryType,
+            notes: document.getElementById("notes").value,
+          };
+
+          if (valueType === "mood_select") {
+            const moodValue = document.getElementById("moodValue").value;
+            if (moodValue) {
+              data.numeric_value = parseInt(moodValue);
+            }
+          } else if (valueType === "numeric") {
+            const numericValue = document.getElementById("numericValue").value;
+            if (numericValue) {
+              data.numeric_value = parseInt(numericValue); // Convert to integer
+            }
+          } else if (valueType === "text") {
+            data.text_value = document.getElementById("textValue").value;
           } else {
-            alert('Error: ' + result.error);
+            data.numeric_value = 1; // Boolean entries
           }
-        } catch (error) {
-          alert('Error adding entry: ' + error.message);
-        }
-      });
+
+          try {
+            const response = await fetch("/api/add_entry", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              closeEntryModal();
+              location.reload(); // Simple reload for now
+            } else {
+              alert("Error: " + result.error);
+            }
+          } catch (error) {
+            alert("Error adding entry: " + error.message);
+          }
+        });
 
       async function deleteEntry(date, hour, entryType) {
-        if (!confirm('Are you sure you want to delete this entry?')) {
+        if (!confirm("Are you sure you want to delete this entry?")) {
           return;
         }
 
         try {
-          const response = await fetch('/api/delete_entry', {
-            method: 'POST',
+          const response = await fetch("/api/delete_entry", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               date: date,
               hour: hour,
-              entry_type: entryType
-            })
+              entry_type: entryType,
+            }),
           });
 
           const result = await response.json();
-          
+
           if (result.success) {
             location.reload(); // Simple reload for now
           } else {
-            alert('Error: ' + result.error);
+            alert("Error: " + result.error);
           }
         } catch (error) {
-          alert('Error deleting entry: ' + error.message);
+          alert("Error deleting entry: " + error.message);
         }
       }
 
       function goToToday() {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split("T")[0];
         const todayColumn = document.querySelector(`[data-date="${today}"]`);
         if (todayColumn) {
-          todayColumn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          todayColumn.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }
 
       function loadMoreDays() {
         // This would implement loading more days in a real application
-        alert('Load more days functionality would be implemented here');
+        alert("Load more days functionality would be implemented here");
       }
 
       // Close modal when clicking outside
-      window.onclick = function(event) {
-        const modal = document.getElementById('entryModal');
+      window.onclick = function (event) {
+        const modal = document.getElementById("entryModal");
         if (event.target === modal) {
           closeEntryModal();
         }
-      }
+      };
 
       // Keyboard shortcuts
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
           closeEntryModal();
         }
       });
 
       // Auto-scroll to today on load
-      window.addEventListener('load', function() {
+      window.addEventListener("load", function () {
         setTimeout(goToToday, 500);
       });
     </script>

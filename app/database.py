@@ -67,17 +67,21 @@ def init_db():
 
     # Insert default entry types
     default_entry_types = [
-        ('mood', 'Mood', '😊', 'numeric', 1, 5, '3', 'Rate your overall mood'),
-        ('energy', 'Energy Level', '⚡', 'numeric', 1, 5, '3', 'Rate your energy level'),
-        ('sleep_quality', 'Sleep Quality', '😴', 'numeric', 1, 5, '3', 'Rate your sleep quality'),
-        ('caffeine', 'Caffeine', '☕', 'numeric', 0, 10, '0', 'Number of caffeine servings'),
+        ('mood', 'Mood', '😊', 'mood_select', 1, 5, '3', 'How are you feeling overall?'),
+        ('energy', 'Energy Level', '⚡', 'numeric', 1, 5, '3', 'Rate your energy level (1-5)'),
+        ('sleep_quality', 'Sleep Quality', '😴', 'numeric', 1, 5, '3', 'Rate your sleep quality (1-5)'),
+        ('caffeine', 'Caffeine', '☕', 'numeric', 0, 10, '1', 'Number of caffeine servings'),
         ('meal', 'Meal', '🍽️', 'text', None, None, '', 'What did you eat?'),
         ('wake_up', 'Wake Up', '🌅', 'boolean', None, None, 'true', 'Mark when you woke up'),
         ('sleep_start', 'Bedtime', '🌙', 'boolean', None, None, 'true', 'Mark when you went to bed'),
         ('exercise', 'Exercise', '🏃', 'text', None, None, '', 'Type of exercise or activity'),
-        ('water', 'Water Intake', '💧', 'numeric', 0, 20, '0', 'Glasses of water'),
-        ('stress', 'Stress Level', '😰', 'numeric', 1, 5, '1', 'Rate your stress level'),
-        ('notes', 'General Notes', '📝', 'text', None, None, '', 'Any observations or notes')
+        ('water', 'Water Intake', '💧', 'numeric', 0, 20, '1', 'Glasses of water'),
+        ('stress', 'Stress Level', '😰', 'numeric', 1, 5, '1', 'Rate your stress level (1-5)'),
+        ('notes', 'General Notes', '📝', 'text', None, None, '', 'Any observations or notes'),
+        ('alcohol', 'Alcohol', '🍷', 'numeric', 0, 10, '1', 'Number of alcoholic drinks'),
+        ('medication', 'Medication', '💊', 'text', None, None, '', 'Medications taken'),
+        ('vitamins', 'Vitamins/Supplements', '🌿', 'text', None, None, '', 'Vitamins or supplements taken'),
+        ('weight', 'Weight', '⚖️', 'numeric', 50, 300, '70', 'Weight in kg')
     ]
 
     cursor.executemany('''
@@ -161,3 +165,38 @@ def get_day_entries(date_str):
     entries = cursor.fetchall()
     conn.close()
     return entries
+
+def get_mood_options():
+    """Get mood options for dropdown."""
+    return [
+        {'value': 1, 'label': 'Terrible 😞', 'emoji': '😞'},
+        {'value': 2, 'label': 'Bad 😔', 'emoji': '😔'},
+        {'value': 3, 'label': 'Okay 😐', 'emoji': '😐'},
+        {'value': 4, 'label': 'Good 😊', 'emoji': '😊'},
+        {'value': 5, 'label': 'Excellent 😄', 'emoji': '😄'}
+    ]
+
+def update_entry_types_for_integers():
+    """Update existing entry types to ensure integer inputs and proper defaults."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Update existing entry types to have better defaults and descriptions
+    updates = [
+        ('caffeine', 'Caffeine', '☕', 'numeric', 0, 10, '1', 'Number of caffeine servings'),
+        ('water', 'Water Intake', '💧', 'numeric', 0, 20, '1', 'Glasses of water'),
+        ('energy', 'Energy Level', '⚡', 'numeric', 1, 5, '3', 'Rate your energy level (1-5)'),
+        ('sleep_quality', 'Sleep Quality', '😴', 'numeric', 1, 5, '3', 'Rate your sleep quality (1-5)'),
+        ('stress', 'Stress Level', '😰', 'numeric', 1, 5, '1', 'Rate your stress level (1-5)'),
+        ('mood', 'Mood', '😊', 'mood_select', 1, 5, '3', 'How are you feeling overall?')
+    ]
+    
+    for entry_type, display_name, emoji, value_type, min_val, max_val, default_val, description in updates:
+        cursor.execute('''
+            UPDATE entry_types 
+            SET display_name = ?, emoji = ?, value_type = ?, min_value = ?, max_value = ?, default_value = ?, description = ?
+            WHERE type_name = ?
+        ''', (display_name, emoji, value_type, min_val, max_val, default_val, description, entry_type))
+    
+    conn.commit()
+    conn.close()
