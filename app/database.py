@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from datetime import datetime, timedelta
 
 # Define the database path
 DB_PATH = os.path.join(os.path.dirname(__file__), '../data/health.db')
@@ -15,29 +16,35 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Table for daily health entries
+    # Table for timeline entries (hourly slots)
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS daily_entries (
-            date TEXT PRIMARY KEY,
-            mood INTEGER,
-            energy INTEGER,
-            sleep_quality INTEGER,
-            notes TEXT
+        CREATE TABLE IF NOT EXISTS timeline_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            datetime TEXT NOT NULL,
+            entry_type TEXT NOT NULL,
+            numeric_value REAL,
+            text_value TEXT,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(datetime, entry_type)
         )
     ''')
 
-    # Table for lifestyle factors
+    # Table for entry types configuration
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS lifestyle (
-            date TEXT PRIMARY KEY,
-            caffeine_count INTEGER,
-            last_meal_time TEXT,
-            sleep_time TEXT,
-            wake_time TEXT
+        CREATE TABLE IF NOT EXISTS entry_types (
+            type_name TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL,
+            emoji TEXT,
+            value_type TEXT NOT NULL, -- 'numeric', 'text', 'boolean'
+            min_value REAL,
+            max_value REAL,
+            default_value TEXT,
+            description TEXT
         )
     ''')
 
-    # Table for weather data
+    # Table for weather data (daily)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS weather (
             date TEXT PRIMARY KEY,
@@ -49,7 +56,7 @@ def init_db():
         )
     ''')
 
-    # Table for moon phases (simplified calculation can be added later)
+    # Table for moon phases (daily)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS moon_phases (
             date TEXT PRIMARY KEY,
@@ -58,5 +65,99 @@ def init_db():
         )
     ''')
 
+    # Insert default entry types
+    default_entry_types = [
+        ('mood', 'Mood', '😊', 'numeric', 1, 5, '3', 'Rate your overall mood'),
+        ('energy', 'Energy Level', '⚡', 'numeric', 1, 5, '3', 'Rate your energy level'),
+        ('sleep_quality', 'Sleep Quality', '😴', 'numeric', 1, 5, '3', 'Rate your sleep quality'),
+        ('caffeine', 'Caffeine', '☕', 'numeric', 0, 10, '0', 'Number of caffeine servings'),
+        ('meal', 'Meal', '🍽️', 'text', None, None, '', 'What did you eat?'),
+        ('wake_up', 'Wake Up', '🌅', 'boolean', None, None, 'true', 'Mark when you woke up'),
+        ('sleep_start', 'Bedtime', '🌙', 'boolean', None, None, 'true', 'Mark when you went to bed'),
+        ('exercise', 'Exercise', '🏃', 'text', None, None, '', 'Type of exercise or activity'),
+        ('water', 'Water Intake', '💧', 'numeric', 0, 20, '0', 'Glasses of water'),
+        ('stress', 'Stress Level', '😰', 'numeric', 1, 5, '1', 'Rate your stress level'),
+        ('notes', 'General Notes', '📝', 'text', None, None, '', 'Any observations or notes')
+    ]
+
+    cursor.executemany('''
+        INSERT OR IGNORE INTO entry_types 
+        (type_name, display_name, emoji, value_type, min_value, max_value, default_value, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', default_entry_types)
+
     conn.commit()
     conn.close()
+
+def get_timeline_data(start_date, end_date):
+    """Get timeline entries for a date range."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT te.datetime, te.entry_type, te.numeric_value, te.text_value, te.notes,
+               et.display_name, et.emoji, et.value_type
+        FROM timeline_entries te
+        JOIN entry_types et ON te.entry_type = et.type_name
+        WHERE date(te.datetime) BETWEEN ? AND ?
+        ORDER BY te.datetime ASC
+    ''', (start_date, end_date))
+    
+    entries = cursor.fetchall()
+    conn.close()
+    return entries
+
+def add_timeline_entry(datetime_str, entry_type, numeric_value=None, text_value=None, notes=None):
+    """Add or update a timeline entry."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT OR REPLACE INTO timeline_entries 
+        (datetime, entry_type, numeric_value, text_value, notes)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (datetime_str, entry_type, numeric_value, text_value, notes))
+    
+    conn.commit()
+    conn.close()
+
+def get_entry_types():
+    """Get all available entry types."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM entry_types ORDER BY display_name')
+    entry_types = cursor.fetchall()
+    conn.close()
+    return entry_types
+
+def delete_timeline_entry(datetime_str, entry_type):
+    """Delete a specific timeline entry."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        DELETE FROM timeline_entries 
+        WHERE datetime = ? AND entry_type = ?
+    ''', (datetime_str, entry_type))
+    
+    conn.commit()
+    conn.close()
+
+def get_day_entries(date_str):
+    """Get all entries for a specific day."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT te.datetime, te.entry_type, te.numeric_value, te.text_value, te.notes,
+               et.display_name, et.emoji, et.value_type
+        FROM timeline_entries te
+        JOIN entry_types et ON te.entry_type = et.type_name
+        WHERE date(te.datetime) = ?
+        ORDER BY te.datetime ASC
+    ''', (date_str,))
+    
+    entries = cursor.fetchall()
+    conn.close()
+    return entries

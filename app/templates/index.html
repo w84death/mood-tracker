@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Personal Health Tracker - Daily Entry</title>
+    <title>Personal Health Tracker - Legacy Entry Form</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,11 +18,19 @@
   <body>
     <div class="container">
       <nav>
+        <a href="{{ url_for('timeline') }}">🌟 New Timeline View</a>
         <a href="{{ url_for('view_entries') }}">📊 View Entries</a>
       </nav>
       
       <main class="main-content">
-        <h1>✨ Daily Health Entry</h1>
+        <h1>✨ Legacy Daily Entry Form</h1>
+        <div style="text-align: center; margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; border: 2px solid #f59e0b;">
+          <h2 style="color: #92400e; margin-bottom: 1rem;">🚀 Try Our New Timeline View!</h2>
+          <p style="color: #78350f; margin-bottom: 1rem;">Experience a more intuitive way to track your health with hourly time slots and flexible data entry.</p>
+          <a href="{{ url_for('timeline') }}" style="display: inline-block; padding: 0.75rem 2rem; background: #f59e0b; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-right: 1rem;">✨ Go to Timeline</a>
+          <button onclick="continueWithLegacy()" style="padding: 0.75rem 1.5rem; background: transparent; color: #92400e; border: 2px solid #f59e0b; border-radius: 8px; font-weight: 600; cursor: pointer;">Continue with Legacy Form</button>
+        </div>
+        <div id="legacyForm" style="display: none;">
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
           Track your daily wellness metrics to better understand your health patterns and improve your overall well-being
         </p>
@@ -122,12 +130,29 @@
 
           <input type="submit" value="Submit Entry" />
         </form>
+        </div>
       </main>
     </div>
 
     <script>
-      // Set today's date as default
-      document.getElementById('date').valueAsDate = new Date();
+      // Auto-redirect to timeline after 10 seconds
+      let redirectTimer;
+      
+      function startRedirectTimer() {
+        redirectTimer = setTimeout(() => {
+          window.location.href = "{{ url_for('timeline') }}";
+        }, 10000);
+      }
+      
+      function continueWithLegacy() {
+        clearTimeout(redirectTimer);
+        document.getElementById('legacyForm').style.display = 'block';
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+      }
+      
+      // Start the timer when page loads
+      startRedirectTimer();
       
       // Enhanced form interactions
       const inputs = document.querySelectorAll('input, textarea');

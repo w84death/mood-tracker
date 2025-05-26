@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Health Tracker - Timeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #6366f1;
+        --secondary-color: #8b5cf6;
+        --accent-color: #06b6d4;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-tertiary: #94a3b8;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        background: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: var(--shadow-md);
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .nav-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      .nav-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+      }
+
+      .nav-btn:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+      }
+
+      .timeline-container {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      .timeline-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        text-align: center;
+      }
+
+      .timeline-grid {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        min-height: 600px;
+      }
+
+      .time-labels {
+        background: var(--bg-tertiary);
+        border-right: 2px solid var(--border-color);
+      }
+
+      .time-label {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+      }
+
+      .timeline-content {
+        overflow-x: auto;
+      }
+
+      .days-header {
+        display: flex;
+        background: var(--bg-secondary);
+        border-bottom: 2px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .day-header {
+        min-width: 200px;
+        padding: 1rem;
+        text-align: center;
+        border-right: 1px solid var(--border-color);
+        font-weight: 600;
+        background: var(--bg-primary);
+      }
+
+      .day-header.today {
+        background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+        color: white;
+      }
+
+      .timeline-rows {
+        display: flex;
+      }
+
+      .day-column {
+        min-width: 200px;
+        border-right: 1px solid var(--border-color);
+      }
+
+      .hour-slot {
+        height: 60px;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        align-items: flex-start;
+        overflow: hidden;
+      }
+
+      .hour-slot:hover {
+        background: var(--bg-secondary);
+      }
+
+      .hour-slot.has-entries {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      }
+
+      .entry-chip {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        max-width: 100%;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .entry-chip:hover {
+        background: var(--secondary-color);
+      }
+
+      .entry-chip .emoji {
+        font-size: 0.8rem;
+      }
+
+      .entry-chip .value {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .entry-chip.mood { background: #10b981; }
+      .entry-chip.energy { background: #f59e0b; }
+      .entry-chip.sleep_quality { background: #8b5cf6; }
+      .entry-chip.caffeine { background: #92400e; }
+      .entry-chip.meal { background: #dc2626; }
+      .entry-chip.exercise { background: #059669; }
+      .entry-chip.water { background: #0891b2; }
+      .entry-chip.stress { background: #dc2626; }
+      .entry-chip.notes { background: #6b7280; }
+      .entry-chip.wake_up { background: #fbbf24; }
+      .entry-chip.sleep_start { background: #4338ca; }
+
+      .add-entry-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: bold;
+      }
+
+      .hour-slot:hover .add-entry-btn {
+        display: flex;
+      }
+
+      .hour-slot.has-entries:hover .add-entry-btn {
+        top: 8px;
+        right: 8px;
+        left: auto;
+        transform: none;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-content {
+        background: var(--bg-primary);
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .close-btn:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: var(--bg-primary);
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: var(--bg-primary);
+        cursor: pointer;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--secondary-color);
+      }
+
+      .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .btn-danger {
+        background: var(--error-color);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+
+      .existing-entries {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+      }
+
+      .existing-entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      .entry-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .delete-entry-btn {
+        background: var(--error-color);
+        color: white;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        .timeline-grid {
+          grid-template-columns: 60px 1fr;
+        }
+
+        .day-header {
+          min-width: 150px;
+          padding: 0.75rem;
+        }
+
+        .day-column {
+          min-width: 150px;
+        }
+
+        .hour-slot {
+          height: 50px;
+          padding: 0.25rem;
+        }
+
+        .time-label {
+          height: 50px;
+          font-size: 0.8rem;
+        }
+
+        .entry-chip {
+          font-size: 0.7rem;
+          padding: 0.15rem 0.3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🌟 Your Health Timeline</h1>
+        <p>Track your daily wellness by adding entries to any hour of any day. Build your health story one moment at a time.</p>
+        
+        <div class="nav-buttons">
+          <a href="{{ url_for('view_entries') }}" class="nav-btn">📊 View Summary</a>
+          <button class="nav-btn" onclick="goToToday()">🎯 Go to Today</button>
+          <button class="nav-btn" onclick="loadMoreDays()">📅 Load More Days</button>
+        </div>
+      </div>
+
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <h2>Timeline View</h2>
+          <p>Click on any time slot to add or view entries</p>
+        </div>
+
+        <div class="timeline-grid">
+          <div class="time-labels">
+            {% for hour in range(24) %}
+            <div class="time-label">{{ "%02d:00"|format(hour) }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="timeline-content">
+            <div class="days-header">
+              {% for day in date_range %}
+              <div class="day-header {{ 'today' if day.is_today else '' }}">
+                <div>{{ day.display }}</div>
+                <div style="font-size: 0.8rem; font-weight: normal; opacity: 0.8;">{{ day.date }}</div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="timeline-rows">
+              {% for day in date_range %}
+              <div class="day-column" data-date="{{ day.date }}">
+                {% for hour in range(24) %}
+                <div class="hour-slot" 
+                     data-date="{{ day.date }}" 
+                     data-hour="{{ hour }}"
+                     onclick="openEntryModal('{{ day.date }}', {{ hour }})"
+                     {% if timeline_data.get(day.date, {}).get(hour) %}class="has-entries"{% endif %}>
+                  
+                  {% if timeline_data.get(day.date, {}).get(hour) %}
+                    {% for entry in timeline_data[day.date][hour] %}
+                    <div class="entry-chip {{ entry.type }}" 
+                         title="{{ entry.display_name }}: {{ entry.numeric_value or entry.text_value or 'Yes' }}{% if entry.notes %} - {{ entry.notes }}{% endif %}">
+                      <span class="emoji">{{ entry.emoji }}</span>
+                      <span class="value">
+                        {% if entry.value_type == 'numeric' %}
+                          {{ entry.numeric_value }}
+                        {% elif entry.value_type == 'text' %}
+                          {{ entry.text_value[:10] }}{% if entry.text_value|length > 10 %}...{% endif %}
+                        {% else %}
+                          ✓
+                        {% endif %}
+                      </span>
+                    </div>
+                    {% endfor %}
+                  {% endif %}
+                  
+                  <button class="add-entry-btn" onclick="event.stopPropagation(); openEntryModal('{{ day.date }}', {{ hour }})">+</button>
+                </div>
+                {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry Modal -->
+    <div id="entryModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="modalTitle">Add Entry</h3>
+          <button class="close-btn" onclick="closeEntryModal()">&times;</button>
+        </div>
+
+        <div id="existingEntries" class="existing-entries" style="display: none;">
+          <h4>Existing Entries:</h4>
+          <div id="entriesList"></div>
+        </div>
+
+        <form id="entryForm">
+          <div class="form-group">
+            <label class="form-label">Entry Type</label>
+            <select id="entryType" class="form-select" onchange="updateFormFields()">
+              <option value="">Select entry type...</option>
+              {% for entry_type in entry_types %}
+              <option value="{{ entry_type.type_name }}" 
+                      data-value-type="{{ entry_type.value_type }}"
+                      data-min="{{ entry_type.min_value or '' }}"
+                      data-max="{{ entry_type.max_value or '' }}"
+                      data-description="{{ entry_type.description }}">
+                {{ entry_type.emoji }} {{ entry_type.display_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="numericField" class="form-group" style="display: none;">
+            <label class="form-label" id="numericLabel">Value</label>
+            <input type="number" id="numericValue" class="form-control" step="0.1">
+            <small id="numericHelp" style="color: var(--text-secondary);"></small>
+          </div>
+
+          <div id="textField" class="form-group" style="display: none;">
+            <label class="form-label" id="textLabel">Description</label>
+            <input type="text" id="textValue" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes (Optional)</label>
+            <textarea id="notes" class="form-control" rows="3" placeholder="Any additional notes..."></textarea>
+          </div>
+
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary" onclick="closeEntryModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Entry</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let currentDate = '';
+      let currentHour = 0;
+      let currentEntries = [];
+
+      function openEntryModal(date, hour) {
+        currentDate = date;
+        currentHour = hour;
+        
+        document.getElementById('modalTitle').textContent = `Add Entry - ${date} ${hour.toString().padStart(2, '0')}:00`;
+        
+        // Load existing entries for this time slot
+        loadExistingEntries(date, hour);
+        
+        // Reset form
+        document.getElementById('entryForm').reset();
+        updateFormFields();
+        
+        document.getElementById('entryModal').style.display = 'block';
+      }
+
+      function closeEntryModal() {
+        document.getElementById('entryModal').style.display = 'none';
+      }
+
+      function loadExistingEntries(date, hour) {
+        // Find existing entries from the timeline data
+        const hourSlot = document.querySelector(`[data-date="${date}"][data-hour="${hour}"]`);
+        const entries = hourSlot.querySelectorAll('.entry-chip');
+        
+        if (entries.length > 0) {
+          document.getElementById('existingEntries').style.display = 'block';
+          const entriesList = document.getElementById('entriesList');
+          entriesList.innerHTML = '';
+          
+          entries.forEach((entry, index) => {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'existing-entry';
+            entryDiv.innerHTML = `
+              <div class="entry-info">
+                <span>${entry.querySelector('.emoji').textContent}</span>
+                <span>${entry.title}</span>
+              </div>
+              <button class="delete-entry-btn" onclick="deleteEntry('${date}', ${hour}, '${entry.classList[1]}')">Delete</button>
+            `;
+            entriesList.appendChild(entryDiv);
+          });
+        } else {
+          document.getElementById('existingEntries').style.display = 'none';
+        }
+      }
+
+      function updateFormFields() {
+        const entryType = document.getElementById('entryType');
+        const selectedOption = entryType.options[entryType.selectedIndex];
+        
+        if (!selectedOption.value) {
+          document.getElementById('numericField').style.display = 'none';
+          document.getElementById('textField').style.display = 'none';
+          return;
+        }
+
+        const valueType = selectedOption.dataset.valueType;
+        const min = selectedOption.dataset.min;
+        const max = selectedOption.dataset.max;
+        const description = selectedOption.dataset.description;
+
+        // Hide all fields first
+        document.getElementById('numericField').style.display = 'none';
+        document.getElementById('textField').style.display = 'none';
+
+        if (valueType === 'numeric') {
+          document.getElementById('numericField').style.display = 'block';
+          document.getElementById('numericLabel').textContent = selectedOption.textContent.split(' ').slice(1).join(' ');
+          
+          const numericInput = document.getElementById('numericValue');
+          if (min) numericInput.min = min;
+          if (max) numericInput.max = max;
+          
+          let helpText = description;
+          if (min && max) {
+            helpText += ` (Range: ${min}-${max})`;
+          }
+          document.getElementById('numericHelp').textContent = helpText;
+        } else if (valueType === 'text') {
+          document.getElementById('textField').style.display = 'block';
+          document.getElementById('textLabel').textContent = selectedOption.textContent.split(' ').slice(1).join(' ');
+        }
+      }
+
+      document.getElementById('entryForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const entryType = document.getElementById('entryType').value;
+        if (!entryType) {
+          alert('Please select an entry type');
+          return;
+        }
+
+        const selectedOption = document.getElementById('entryType').options[document.getElementById('entryType').selectedIndex];
+        const valueType = selectedOption.dataset.valueType;
+        
+        const data = {
+          date: currentDate,
+          hour: currentHour,
+          entry_type: entryType,
+          notes: document.getElementById('notes').value
+        };
+
+        if (valueType === 'numeric') {
+          const numericValue = document.getElementById('numericValue').value;
+          if (numericValue) {
+            data.numeric_value = parseFloat(numericValue);
+          }
+        } else if (valueType === 'text') {
+          data.text_value = document.getElementById('textValue').value;
+        } else {
+          data.numeric_value = 1; // Boolean entries
+        }
+
+        try {
+          const response = await fetch('/api/add_entry', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            closeEntryModal();
+            location.reload(); // Simple reload for now
+          } else {
+            alert('Error: ' + result.error);
+          }
+        } catch (error) {
+          alert('Error adding entry: ' + error.message);
+        }
+      });
+
+      async function deleteEntry(date, hour, entryType) {
+        if (!confirm('Are you sure you want to delete this entry?')) {
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/delete_entry', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              date: date,
+              hour: hour,
+              entry_type: entryType
+            })
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            location.reload(); // Simple reload for now
+          } else {
+            alert('Error: ' + result.error);
+          }
+        } catch (error) {
+          alert('Error deleting entry: ' + error.message);
+        }
+      }
+
+      function goToToday() {
+        const today = new Date().toISOString().split('T')[0];
+        const todayColumn = document.querySelector(`[data-date="${today}"]`);
+        if (todayColumn) {
+          todayColumn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      function loadMoreDays() {
+        // This would implement loading more days in a real application
+        alert('Load more days functionality would be implemented here');
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        const modal = document.getElementById('entryModal');
+        if (event.target === modal) {
+          closeEntryModal();
+        }
+      }
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeEntryModal();
+        }
+      });
+
+      // Auto-scroll to today on load
+      window.addEventListener('load', function() {
+        setTimeout(goToToday, 500);
+      });
+    </script>
+  </body>
+</html>
