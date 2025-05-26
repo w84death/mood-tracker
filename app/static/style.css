@@ -194,6 +194,7 @@ nav a:hover,
   min-width: 200px;
   padding: 1rem;
   text-align: center;
+  flex-direction: column;
   border-right: 1px solid var(--border-color);
   font-weight: 600;
   background: var(--bg-primary);
