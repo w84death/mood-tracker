@@ -18,6 +18,7 @@ A modern, intuitive health and mood tracking application with a timeline-based i
 - **Exercise**: Record physical activities
 - **Nutrition**: Log meals and water intake
 - **Caffeine intake**: Track coffee and other stimulants
+- **Weather correlation**: Automatic weather data for mood analysis
 - **Custom notes**: Add detailed observations
 
 ### 📱 Modern Interface
@@ -29,6 +30,7 @@ A modern, intuitive health and mood tracking application with a timeline-based i
 
 ### 📈 Analytics & Insights
 - **Daily summaries**: View key metrics at a glance
+- **Weather correlation**: See how weather affects your mood and energy
 - **Entry history**: Browse past entries by date
 - **Pattern recognition**: Identify trends in your data
 - **Export capabilities**: Data portability for analysis
@@ -134,6 +136,49 @@ The `run-docker.sh` script provides easy management:
 - **Environment configuration**: Easy customization
 - **Health checks**: Automatic service monitoring
 
+## 🌤️ Weather Integration
+
+The mood tracker automatically fetches weather data to help correlate environmental factors with your mood and energy levels.
+
+### Setup Weather API
+1. **Get OpenWeather API Key**:
+   - Visit [OpenWeatherMap](https://openweathermap.org/api)
+   - Sign up for a free account
+   - Generate an API key
+
+2. **Configure Location**:
+   - Set your latitude and longitude in `.env`
+   - Default coordinates are for Poznań, Poland
+   - Use tools like [latlong.net](https://www.latlong.net/) to find your coordinates
+
+3. **Environment Variables**:
+```env
+OPENWEATHER_API_KEY=your_actual_api_key_here
+LATITUDE=your_latitude
+LONGITUDE=your_longitude
+```
+
+### Weather Features
+- **Automatic data fetching**: Weather data is retrieved when you view dates
+- **Historical weather**: Past weather data for mood correlation analysis
+- **Timeline integration**: Weather info displayed in day headers
+- **Daily summaries**: Weather conditions shown alongside mood metrics
+- **Correlation insights**: Visual connections between weather and wellbeing
+
+### Weather Data Includes
+- **Temperature**: Daily min/max temperatures in Celsius
+- **Humidity**: Relative humidity percentage
+- **Precipitation**: Rainfall amounts in millimeters
+- **Weather conditions**: Clear, cloudy, rainy, etc.
+- **Pressure**: Atmospheric pressure
+- **Wind speed**: Wind conditions
+
+### Privacy & Data
+- Weather data is cached locally in your database
+- No personal location data is sent to external services
+- Only coordinates (lat/lon) are used for weather lookup
+- Weather data helps identify patterns but doesn't track your movements
+
 ## 🔧 Development
 
 ### Local Development
@@ -159,6 +204,9 @@ FLASK_ENV=development
 FLASK_DEBUG=True
 DATABASE_PATH=./data/health.db
 PORT=8080
+OPENWEATHER_API_KEY=your_api_key_here
+LATITUDE=52.4064
+LONGITUDE=16.9252
 ```
 
 ### File Structure

@@ -176,6 +176,115 @@ def get_mood_options():
         {'value': 5, 'label': 'Excellent 😄', 'emoji': '😄'}
     ]
 
+def store_weather_data(date_str, weather_data):
+    """Store weather data for a specific date."""
+    if not weather_data:
+        return
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT OR REPLACE INTO weather 
+        (date, temp_min, temp_max, humidity, pressure, precipitation)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (
+        date_str,
+        weather_data.get('temp_min'),
+        weather_data.get('temp_max'),
+        weather_data.get('humidity'),
+        weather_data.get('pressure'),
+        weather_data.get('precipitation', 0)
+    ))
+    
+    conn.commit()
+    conn.close()
+
+def get_weather_data(date_str):
+    """Get weather data for a specific date."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM weather WHERE date = ?', (date_str,))
+    weather = cursor.fetchone()
+    conn.close()
+    
+    if weather:
+        return dict(weather)
+    return None
+
+def get_weather_data_range(start_date, end_date):
+    """Get weather data for a date range."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT * FROM weather 
+        WHERE date BETWEEN ? AND ? 
+        ORDER BY date
+    ''', (start_date, end_date))
+    
+    weather_data = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in weather_data]
+
+def get_daily_summary_with_weather(date_str):
+    """Get daily summary including weather data and mood entries."""
+    # Get all entries for the day
+    entries = get_day_entries(date_str)
+    
+    # Get weather data
+    weather = get_weather_data(date_str)
+    
+    # Process entries into summary
+    summary = {
+        'date': date_str,
+        'weather': weather,
+        'mood_entries': [],
+        'energy_entries': [],
+        'sleep_quality': None,
+        'stress_entries': [],
+        'notes': [],
+        'activities': []
+    }
+    
+    for entry in entries:
+        if entry['entry_type'] == 'mood' and entry['numeric_value']:
+            summary['mood_entries'].append({
+                'time': entry['datetime'].split(' ')[1][:5],
+                'value': entry['numeric_value'],
+                'notes': entry['notes']
+            })
+        elif entry['entry_type'] == 'energy' and entry['numeric_value']:
+            summary['energy_entries'].append({
+                'time': entry['datetime'].split(' ')[1][:5],
+                'value': entry['numeric_value'],
+                'notes': entry['notes']
+            })
+        elif entry['entry_type'] == 'sleep_quality' and entry['numeric_value']:
+            summary['sleep_quality'] = entry['numeric_value']
+        elif entry['entry_type'] == 'stress' and entry['numeric_value']:
+            summary['stress_entries'].append({
+                'time': entry['datetime'].split(' ')[1][:5],
+                'value': entry['numeric_value'],
+                'notes': entry['notes']
+            })
+        elif entry['notes']:
+            summary['notes'].append({
+                'time': entry['datetime'].split(' ')[1][:5],
+                'type': entry['display_name'],
+                'text': entry['notes']
+            })
+        elif entry['text_value']:
+            summary['activities'].append({
+                'time': entry['datetime'].split(' ')[1][:5],
+                'type': entry['display_name'],
+                'text': entry['text_value']
+            })
+    
+    return summary
+
 def update_entry_types_for_integers():
     """Update existing entry types to ensure integer inputs and proper defaults."""
     conn = get_db_connection()

@@ -53,11 +53,27 @@
               {% for day in date_range %}
               <div class="day-header {{ 'today' if day.is_today else '' }}">
                 <div>{{ day.display }}</div>
-                <div
-                  style="font-size: 0.8rem; font-weight: normal; opacity: 0.8"
-                >
-                  {{ day.date }}
+                {% if day.weather %}
+                <div class="weather-info">
+                  <div>
+                    {{ day.weather.temp_min|round(1) }}°/{{ day.weather.temp_max|round(1) }}°C
+                  </div>
+                  {% if day.weather.humidity %}
+                  <div>
+                    💧 {{ day.weather.humidity }}%
+                  </div>
+                  {% endif %}
+                  {% if day.weather.precipitation and day.weather.precipitation > 0 %}
+                  <div>
+                    🌧️ {{ day.weather.precipitation|round(1) }}mm
+                  </div>
+                  {% endif %}
                 </div>
+                {% elif day.weather_summary %}
+                <div class="weather-info">
+                  {{ day.weather_summary }}
+                </div>
+                {% endif %}
               </div>
               {% endfor %}
             </div>

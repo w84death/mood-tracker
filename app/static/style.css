@@ -14,24 +14,14 @@
   --border-color: #e2e8f0;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #1e293b;
-    --bg-secondary: #334155;
-    --bg-tertiary: #475569;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
-    --border-color: #475569;
-  }
 }
 
 * {
@@ -41,8 +31,18 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  background: linear-gradient(
+    135deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 100%
+  );
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
@@ -68,7 +68,11 @@ body {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -94,7 +98,8 @@ nav {
   box-shadow: var(--shadow-sm);
 }
 
-nav a, .nav-btn {
+nav a,
+.nav-btn {
   padding: 0.75rem 1.5rem;
   background: var(--primary-color);
   color: white;
@@ -110,7 +115,8 @@ nav a, .nav-btn {
   gap: 0.5rem;
 }
 
-nav a:hover, .nav-btn:hover {
+nav a:hover,
+.nav-btn:hover {
   background: var(--secondary-color);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
@@ -134,7 +140,11 @@ nav a:hover, .nav-btn:hover {
 
 .timeline-header {
   padding: 1.5rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   text-align: center;
 }
@@ -153,6 +163,7 @@ nav a:hover, .nav-btn:hover {
 .time-labels {
   background: var(--bg-tertiary);
   border-right: 2px solid var(--border-color);
+  align-content: end;
 }
 
 .time-label {
@@ -189,8 +200,16 @@ nav a:hover, .nav-btn:hover {
 }
 
 .day-header.today {
-  background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+  background: linear-gradient(
+    135deg,
+    var(--accent-color),
+    var(--primary-color)
+  );
   color: white;
+}
+
+.weather-info {
+  font-size: 0.8rem;
 }
 
 .timeline-rows {
@@ -256,17 +275,39 @@ nav a:hover, .nav-btn:hover {
 }
 
 /* Entry chip colors */
-.entry-chip.mood { background: #10b981; }
-.entry-chip.energy { background: #f59e0b; }
-.entry-chip.sleep_quality { background: #8b5cf6; }
-.entry-chip.caffeine { background: #92400e; }
-.entry-chip.meal { background: #dc2626; }
-.entry-chip.exercise { background: #059669; }
-.entry-chip.water { background: #0891b2; }
-.entry-chip.stress { background: #dc2626; }
-.entry-chip.notes { background: #6b7280; }
-.entry-chip.wake_up { background: #fbbf24; }
-.entry-chip.sleep_start { background: #4338ca; }
+.entry-chip.mood {
+  background: #10b981;
+}
+.entry-chip.energy {
+  background: #f59e0b;
+}
+.entry-chip.sleep_quality {
+  background: #8b5cf6;
+}
+.entry-chip.caffeine {
+  background: #92400e;
+}
+.entry-chip.meal {
+  background: #dc2626;
+}
+.entry-chip.exercise {
+  background: #059669;
+}
+.entry-chip.water {
+  background: #0891b2;
+}
+.entry-chip.stress {
+  background: #dc2626;
+}
+.entry-chip.notes {
+  background: #6b7280;
+}
+.entry-chip.wake_up {
+  background: #fbbf24;
+}
+.entry-chip.sleep_start {
+  background: #4338ca;
+}
 
 .add-entry-btn {
   position: absolute;
@@ -375,7 +416,11 @@ nav a:hover, .nav-btn:hover {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -580,7 +625,11 @@ input[type="submit"]:hover {
 
 .day-header {
   padding: 1.5rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   display: flex;
   justify-content: space-between;
@@ -642,10 +691,18 @@ input[type="submit"]:hover {
   letter-spacing: 0.5px;
 }
 
-.metric-card.excellent { border-left: 4px solid var(--success-color); }
-.metric-card.good { border-left: 4px solid var(--primary-color); }
-.metric-card.average { border-left: 4px solid var(--warning-color); }
-.metric-card.poor { border-left: 4px solid var(--error-color); }
+.metric-card.excellent {
+  border-left: 4px solid var(--success-color);
+}
+.metric-card.good {
+  border-left: 4px solid var(--primary-color);
+}
+.metric-card.average {
+  border-left: 4px solid var(--warning-color);
+}
+.metric-card.poor {
+  border-left: 4px solid var(--error-color);
+}
 
 .entries-section {
   margin-top: 1.5rem;
@@ -823,7 +880,11 @@ table {
 }
 
 th {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   padding: 1rem;
   text-align: left;
@@ -1033,13 +1094,24 @@ tr:hover {
 
 /* Animation utilities */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .fade-in {

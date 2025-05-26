@@ -2,6 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import database
 import weather
 from datetime import datetime, timedelta, date
+import threading
+import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -17,6 +23,26 @@ def timeline():
     entries = database.get_timeline_data(start_date.isoformat(), end_date.isoformat())
     entry_types = database.get_entry_types()
     mood_options = database.get_mood_options()
+    
+    # Get weather data for the date range
+    weather_data = database.get_weather_data_range(start_date.isoformat(), end_date.isoformat())
+    weather_by_date = {w['date']: w for w in weather_data}
+    
+    # Fetch missing weather data in background
+    def fetch_missing_weather():
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.isoformat()
+            if date_str not in weather_by_date:
+                weather_info = weather.get_weather_for_date(date_str)
+                if weather_info:
+                    database.store_weather_data(date_str, weather_info)
+            current_date += timedelta(days=1)
+    
+    # Start weather fetch in background thread
+    weather_thread = threading.Thread(target=fetch_missing_weather)
+    weather_thread.daemon = True
+    weather_thread.start()
     
     # Organize entries by date and hour
     timeline_data = {}
@@ -40,14 +66,18 @@ def timeline():
             'notes': entry['notes']
         })
     
-    # Generate date range for template
+    # Generate date range for template with weather
     date_range = []
     current_date = start_date
     while current_date <= end_date:
+        date_str = current_date.isoformat()
+        weather_info = weather_by_date.get(date_str, {})
         date_range.append({
-            'date': current_date.isoformat(),
+            'date': date_str,
             'display': current_date.strftime('%A, %B %d'),
-            'is_today': current_date == today
+            'is_today': current_date == today,
+            'weather': weather_info,
+            'weather_summary': weather.format_weather_summary(weather_info) if weather_info else None
         })
         current_date += timedelta(days=1)
     
@@ -137,10 +167,30 @@ def get_entries():
 
 @app.route('/entries')
 def view_entries():
-    """Legacy view for entries (for backward compatibility)."""
+    """Enhanced view for daily summaries with weather correlation."""
     # Get recent timeline entries and convert to daily summary
     today = date.today()
     start_date = today - timedelta(days=30)
+    
+    # Get weather data for the range
+    weather_data = database.get_weather_data_range(start_date.isoformat(), today.isoformat())
+    weather_by_date = {w['date']: w for w in weather_data}
+    
+    # Fetch missing weather data
+    def fetch_missing_weather():
+        current_date = start_date
+        while current_date <= today:
+            date_str = current_date.isoformat()
+            if date_str not in weather_by_date:
+                weather_info = weather.get_weather_for_date(date_str)
+                if weather_info:
+                    database.store_weather_data(date_str, weather_info)
+            current_date += timedelta(days=1)
+    
+    # Start weather fetch in background
+    weather_thread = threading.Thread(target=fetch_missing_weather)
+    weather_thread.daemon = True
+    weather_thread.start()
     
     entries = database.get_timeline_data(start_date.isoformat(), today.isoformat())
     
@@ -154,23 +204,37 @@ def view_entries():
             daily_summaries[date_key] = {
                 'date': date_key,
                 'entries': [],
-                'mood': None,
-                'energy': None,
+                'mood_values': [],
+                'energy_values': [],
+                'stress_values': [],
                 'sleep_quality': None,
-                'notes': []
+                'notes': [],
+                'weather': weather_by_date.get(date_key, {})
             }
         
         daily_summaries[date_key]['entries'].append(entry)
         
         # Extract key metrics for summary
         if entry['entry_type'] == 'mood' and entry['numeric_value']:
-            daily_summaries[date_key]['mood'] = entry['numeric_value']
+            daily_summaries[date_key]['mood_values'].append(entry['numeric_value'])
         elif entry['entry_type'] == 'energy' and entry['numeric_value']:
-            daily_summaries[date_key]['energy'] = entry['numeric_value']
+            daily_summaries[date_key]['energy_values'].append(entry['numeric_value'])
+        elif entry['entry_type'] == 'stress' and entry['numeric_value']:
+            daily_summaries[date_key]['stress_values'].append(entry['numeric_value'])
         elif entry['entry_type'] == 'sleep_quality' and entry['numeric_value']:
             daily_summaries[date_key]['sleep_quality'] = entry['numeric_value']
         elif entry['notes']:
             daily_summaries[date_key]['notes'].append(entry['notes'])
+    
+    # Calculate averages and add weather summaries
+    for date_key, summary in daily_summaries.items():
+        # Calculate average mood, energy, stress
+        summary['avg_mood'] = sum(summary['mood_values']) / len(summary['mood_values']) if summary['mood_values'] else None
+        summary['avg_energy'] = sum(summary['energy_values']) / len(summary['energy_values']) if summary['energy_values'] else None
+        summary['avg_stress'] = sum(summary['stress_values']) / len(summary['stress_values']) if summary['stress_values'] else None
+        
+        # Add weather summary
+        summary['weather_summary'] = weather.format_weather_summary(summary['weather']) if summary['weather'] else None
     
     # Convert to list and sort by date (newest first)
     summaries_list = list(daily_summaries.values())
@@ -191,6 +255,10 @@ def load_timeline():
         entries = database.get_timeline_data(start_date, end_date)
         entry_types = database.get_entry_types()
         mood_options = database.get_mood_options()
+        
+        # Get weather data for the range
+        weather_data = database.get_weather_data_range(start_date, end_date)
+        weather_by_date = {w['date']: w for w in weather_data}
             
         # Organize entries by date and hour
         timeline_data = {}
@@ -217,7 +285,8 @@ def load_timeline():
         return jsonify({
             'timeline_data': timeline_data,
             'entry_types': [dict(et) for et in entry_types],
-            'mood_options': mood_options
+            'mood_options': mood_options,
+            'weather_data': weather_by_date
         })
     
     except Exception as e:
@@ -258,7 +327,41 @@ def submit():
     
     return redirect(url_for('timeline'))
 
+@app.route('/api/weather/<date_str>')
+def get_weather_api(date_str):
+    """API endpoint to get weather data for a specific date."""
+    try:
+        # Check if we have cached weather data
+        cached_weather = database.get_weather_data(date_str)
+        if cached_weather:
+            return jsonify({
+                'success': True,
+                'weather': cached_weather,
+                'summary': weather.format_weather_summary(cached_weather)
+            })
+        
+        # Fetch fresh weather data
+        weather_data = weather.get_weather_for_date(date_str)
+        if weather_data:
+            database.store_weather_data(date_str, weather_data)
+            return jsonify({
+                'success': True,
+                'weather': weather_data,
+                'summary': weather.format_weather_summary(weather_data)
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Weather data not available for this date'
+            }), 404
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
 if __name__ == '__main__':
     database.init_db()  # Initialize the database on startup
     database.update_entry_types_for_integers()  # Update existing entry types
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8081, debug=True)
