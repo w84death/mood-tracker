@@ -28,21 +28,16 @@ def timeline():
     weather_data = database.get_weather_data_range(start_date.isoformat(), end_date.isoformat())
     weather_by_date = {w['date']: w for w in weather_data}
     
-    # Fetch missing weather data in background
-    def fetch_missing_weather():
-        current_date = start_date
-        while current_date <= end_date:
-            date_str = current_date.isoformat()
-            if date_str not in weather_by_date:
-                weather_info = weather.get_weather_for_date(date_str)
-                if weather_info:
-                    database.store_weather_data(date_str, weather_info)
-            current_date += timedelta(days=1)
-    
-    # Start weather fetch in background thread
-    weather_thread = threading.Thread(target=fetch_missing_weather)
-    weather_thread.daemon = True
-    weather_thread.start()
+    # Fetch missing weather data synchronously for now to avoid race conditions
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.isoformat()
+        if date_str not in weather_by_date:
+            weather_info = weather.get_weather_for_date(date_str)
+            if weather_info:
+                database.store_weather_data(date_str, weather_info)
+                weather_by_date[date_str] = weather_info
+        current_date += timedelta(days=1)
     
     # Organize entries by date and hour
     timeline_data = {}
@@ -72,10 +67,12 @@ def timeline():
     while current_date <= end_date:
         date_str = current_date.isoformat()
         weather_info = weather_by_date.get(date_str, {})
+        is_future = current_date > today
         date_range.append({
             'date': date_str,
             'display': current_date.strftime('%A, %B %d'),
             'is_today': current_date == today,
+            'is_future': is_future,
             'weather': weather_info,
             'weather_summary': weather.format_weather_summary(weather_info) if weather_info else None
         })
@@ -96,6 +93,14 @@ def add_entry():
         date_str = data['date']
         hour = int(data['hour'])
         entry_type = data['entry_type']
+        
+        # Check if this is a future date and restrict entry types
+        if weather.is_future_date(date_str):
+            if entry_type != 'notes':
+                return jsonify({
+                    'success': False, 
+                    'error': 'For future dates, only general notes entries are allowed'
+                }), 400
         
         # Create datetime string
         datetime_str = f"{date_str} {hour:02d}:00:00"
@@ -176,21 +181,16 @@ def view_entries():
     weather_data = database.get_weather_data_range(start_date.isoformat(), today.isoformat())
     weather_by_date = {w['date']: w for w in weather_data}
     
-    # Fetch missing weather data
-    def fetch_missing_weather():
-        current_date = start_date
-        while current_date <= today:
-            date_str = current_date.isoformat()
-            if date_str not in weather_by_date:
-                weather_info = weather.get_weather_for_date(date_str)
-                if weather_info:
-                    database.store_weather_data(date_str, weather_info)
-            current_date += timedelta(days=1)
-    
-    # Start weather fetch in background
-    weather_thread = threading.Thread(target=fetch_missing_weather)
-    weather_thread.daemon = True
-    weather_thread.start()
+    # Fetch missing weather data synchronously
+    current_date = start_date
+    while current_date <= today:
+        date_str = current_date.isoformat()
+        if date_str not in weather_by_date:
+            weather_info = weather.get_weather_for_date(date_str)
+            if weather_info:
+                database.store_weather_data(date_str, weather_info)
+                weather_by_date[date_str] = weather_info
+        current_date += timedelta(days=1)
     
     entries = database.get_timeline_data(start_date.isoformat(), today.isoformat())
     

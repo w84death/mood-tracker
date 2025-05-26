@@ -159,19 +159,27 @@ LONGITUDE=your_longitude
 ```
 
 ### Weather Features
-- **Automatic data fetching**: Weather data is retrieved when you view dates
-- **Historical weather**: Past weather data for mood correlation analysis
-- **Timeline integration**: Weather info displayed in day headers
+- **Current weather**: Real-time data for today
+- **5-day forecast**: Weather predictions for future dates
+- **Historical weather**: Limited to free tier (requires subscription for dates older than 5 days)
+- **Timeline integration**: Weather info displayed in day headers with data type indicators
 - **Daily summaries**: Weather conditions shown alongside mood metrics
-- **Correlation insights**: Visual connections between weather and wellbeing
+- **Future date restrictions**: Only notes entries allowed for future dates
+- **Visual indicators**: Different styling for current, forecast, and historical data
 
 ### Weather Data Includes
 - **Temperature**: Daily min/max temperatures in Celsius
 - **Humidity**: Relative humidity percentage
 - **Precipitation**: Rainfall amounts in millimeters
-- **Weather conditions**: Clear, cloudy, rainy, etc.
-- **Pressure**: Atmospheric pressure
-- **Wind speed**: Wind conditions
+- **Weather conditions**: Clear, cloudy, rainy, etc. with emojis
+- **Data type**: Indicators for current, forecast, or historical data
+- **Pressure & wind**: Additional environmental metrics
+
+### API Limitations
+- **Free tier**: Current weather + 5-day forecast
+- **Historical data**: Requires paid subscription for dates older than 5 days
+- **Future dates**: Limited to 5-day forecast range
+- **Entry restrictions**: Future dates only allow general notes
 
 ### Privacy & Data
 - Weather data is cached locally in your database

@@ -51,7 +51,7 @@
           <div class="timeline-content">
             <div class="days-header">
               {% for day in date_range %}
-              <div class="day-header {{ 'today' if day.is_today else '' }}">
+              <div class="day-header {{ 'today' if day.is_today else '' }} {{ 'future-date' if day.is_future else '' }}">
                 <div>{{ day.display }}</div>
                 {% if day.weather %}
                 <div class="weather-info">
@@ -87,6 +87,7 @@
                   data-date="{{ day.date }}"
                   data-hour="{{ hour }}"
                   onclick="openEntryModal('{{ day.date }}', {{ hour }})"
+                  {% if day.is_future %}data-future="true"{% endif %}
                   {%
                   if
                   timeline_data.get(day.date,
@@ -116,8 +117,9 @@
                   <button
                     class="add-entry-btn"
                     onclick="event.stopPropagation(); openEntryModal('{{ day.date }}', {{ hour }})"
+                    {% if day.is_future %}title="Future date - Notes only"{% else %}title="Add entry"{% endif %}
                   >
-                    +
+                    {% if day.is_future %}📝{% else %}+{% endif %}
                   </button>
                 </div>
                 {% endfor %}
@@ -241,11 +243,24 @@
         document.getElementById("modalTitle").textContent =
           `Add Entry - ${date} ${hour.toString().padStart(2, "0")}:00`;
 
+        // Check if this is a future date
+        const today = new Date().toISOString().split('T')[0];
+        const isFutureDate = date > today;
+        
+        // Update modal title for future dates
+        if (isFutureDate) {
+          document.getElementById("modalTitle").textContent =
+            `Add Entry - ${date} ${hour.toString().padStart(2, "0")}:00 (Future Date - Notes Only)`;
+        }
+
         // Load existing entries for this time slot
         loadExistingEntries(date, hour);
 
         // Reset form
         document.getElementById("entryForm").reset();
+        
+        // Filter entry types for future dates
+        filterEntryTypesForDate(isFutureDate);
         updateFormFields();
 
         // Set focus to entry type dropdown for better UX
@@ -284,6 +299,40 @@
           });
         } else {
           document.getElementById("existingEntries").style.display = "none";
+        }
+      }
+
+      function filterEntryTypesForDate(isFutureDate) {
+        const entryTypeSelect = document.getElementById("entryType");
+        const options = entryTypeSelect.querySelectorAll("option");
+        
+        options.forEach(option => {
+          if (option.value === "") {
+            // Keep the empty "Select entry type..." option
+            option.style.display = "block";
+            option.disabled = false;
+            return;
+          }
+          
+          if (isFutureDate) {
+            // For future dates, only allow 'notes' entry type
+            if (option.value === "notes") {
+              option.style.display = "block";
+              option.disabled = false;
+            } else {
+              option.style.display = "none";
+              option.disabled = true;
+            }
+          } else {
+            // For current and past dates, allow all entry types
+            option.style.display = "block";
+            option.disabled = false;
+          }
+        });
+        
+        // If current selection is not valid for future dates, reset
+        if (isFutureDate && entryTypeSelect.value !== "" && entryTypeSelect.value !== "notes") {
+          entryTypeSelect.value = "";
         }
       }
 

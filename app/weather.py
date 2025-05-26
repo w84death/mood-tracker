@@ -30,7 +30,8 @@ def get_current_weather():
             'weather_main': data['weather'][0]['main'],
             'weather_description': data['weather'][0]['description'],
             'wind_speed': data.get('wind', {}).get('speed', 0),
-            'clouds': data.get('clouds', {}).get('all', 0)
+            'clouds': data.get('clouds', {}).get('all', 0),
+            'data_type': 'current'
         }
         return weather_data
     except requests.RequestException as e:
@@ -40,26 +41,95 @@ def get_current_weather():
         print(f"Error parsing weather data: {e}")
         return None
 
-def get_historical_weather(date_str):
-    """Fetch historical weather data for a specific date (YYYY-MM-DD format)."""
+def get_forecast_weather(date_str):
+    """Fetch forecast weather data for future dates."""
     if not API_KEY:
         print("Warning: OPENWEATHER_API_KEY not set")
         return None
         
     try:
-        # Convert date string to timestamp
+        url = f'http://api.openweathermap.org/data/2.5/forecast?lat={LAT}&lon={LON}&appid={API_KEY}&units=metric'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        # Parse the target date
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        # Find forecast data for the target date
+        daily_forecasts = {}
+        for forecast in data['list']:
+            forecast_datetime = datetime.fromtimestamp(forecast['dt'])
+            forecast_date = forecast_datetime.date()
+            
+            if forecast_date not in daily_forecasts:
+                daily_forecasts[forecast_date] = []
+            daily_forecasts[forecast_date].append(forecast)
+        
+        if target_date in daily_forecasts:
+            day_forecasts = daily_forecasts[target_date]
+            
+            # Calculate daily aggregates from hourly forecasts
+            temps = [f['main']['temp'] for f in day_forecasts]
+            humidities = [f['main']['humidity'] for f in day_forecasts]
+            precipitations = [f.get('rain', {}).get('3h', 0) + f.get('snow', {}).get('3h', 0) for f in day_forecasts]
+            
+            # Get the most common weather condition
+            weather_conditions = [f['weather'][0]['main'] for f in day_forecasts]
+            most_common_condition = max(set(weather_conditions), key=weather_conditions.count)
+            
+            # Get description from first forecast with the most common condition
+            description = next(f['weather'][0]['description'] for f in day_forecasts if f['weather'][0]['main'] == most_common_condition)
+            
+            weather_data = {
+                'temp_min': min(temps),
+                'temp_max': max(temps),
+                'temp_current': sum(temps) / len(temps),
+                'humidity': sum(humidities) / len(humidities),
+                'pressure': day_forecasts[0]['main']['pressure'],
+                'precipitation': max(precipitations),
+                'weather_main': most_common_condition,
+                'weather_description': description,
+                'wind_speed': sum(f.get('wind', {}).get('speed', 0) for f in day_forecasts) / len(day_forecasts),
+                'clouds': sum(f.get('clouds', {}).get('all', 0) for f in day_forecasts) / len(day_forecasts),
+                'data_type': 'forecast'
+            }
+            return weather_data
+        else:
+            print(f"No forecast data available for {date_str}")
+            return None
+            
+    except requests.RequestException as e:
+        print(f"Error fetching forecast weather data for {date_str}: {e}")
+        return None
+    except (KeyError, ValueError, IndexError) as e:
+        print(f"Error parsing forecast weather data for {date_str}: {e}")
+        return None
+
+def get_historical_weather(date_str):
+    """Fetch historical weather data for a specific date (YYYY-MM-DD format).
+    Note: Historical weather data requires OpenWeather subscription for dates older than 5 days.
+    """
+    if not API_KEY:
+        print("Warning: OPENWEATHER_API_KEY not set")
+        return None
+        
+    try:
+        # Convert date string to timestamp at noon UTC
         date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        # Set time to noon to get better daily average
+        date_obj = date_obj.replace(hour=12, minute=0, second=0)
         timestamp = int(date_obj.timestamp())
         
-        # Check if date is more than 5 days ago (requires One Call API 3.0)
+        # Check how many days ago this was
         days_ago = (datetime.now() - date_obj).days
         
+        # For dates more than 5 days ago, try the paid historical API
         if days_ago > 5:
-            # Use One Call API 3.0 for historical data (requires subscription)
             url = f'http://api.openweathermap.org/data/3.0/onecall/timemachine?lat={LAT}&lon={LON}&dt={timestamp}&appid={API_KEY}&units=metric'
         else:
-            # For recent dates, use current weather as approximation
-            return get_current_weather()
+            # For recent dates (within 5 days), use the free tier One Call API
+            url = f'http://api.openweathermap.org/data/2.5/onecall/timemachine?lat={LAT}&lon={LON}&dt={timestamp}&appid={API_KEY}&units=metric'
             
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -68,17 +138,30 @@ def get_historical_weather(date_str):
         # Extract weather data from historical API response
         if 'data' in data and len(data['data']) > 0:
             day_data = data['data'][0]
+            
+            # Handle different response structures
+            if 'temp' in day_data:
+                if isinstance(day_data['temp'], dict):
+                    temp_min = day_data['temp'].get('min', day_data['temp'].get('day', 0))
+                    temp_max = day_data['temp'].get('max', day_data['temp'].get('day', 0))
+                    temp_current = day_data['temp'].get('day', 0)
+                else:
+                    temp_min = temp_max = temp_current = day_data['temp']
+            else:
+                temp_min = temp_max = temp_current = 0
+                
             weather_data = {
-                'temp_min': day_data.get('temp', {}).get('min', day_data.get('temp', 0)),
-                'temp_max': day_data.get('temp', {}).get('max', day_data.get('temp', 0)),
-                'temp_current': day_data.get('temp', 0) if isinstance(day_data.get('temp'), (int, float)) else day_data.get('temp', {}).get('day', 0),
+                'temp_min': temp_min,
+                'temp_max': temp_max,
+                'temp_current': temp_current,
                 'humidity': day_data.get('humidity', 0),
                 'pressure': day_data.get('pressure', 0),
                 'precipitation': day_data.get('rain', {}).get('1h', 0) + day_data.get('snow', {}).get('1h', 0) if 'rain' in day_data or 'snow' in day_data else 0,
                 'weather_main': day_data.get('weather', [{}])[0].get('main', 'Unknown'),
                 'weather_description': day_data.get('weather', [{}])[0].get('description', 'Unknown'),
                 'wind_speed': day_data.get('wind_speed', 0),
-                'clouds': day_data.get('clouds', 0)
+                'clouds': day_data.get('clouds', 0),
+                'data_type': 'historical'
             }
             return weather_data
         else:
@@ -86,10 +169,10 @@ def get_historical_weather(date_str):
             return None
             
     except requests.RequestException as e:
-        print(f"Error fetching historical weather data for {date_str}: {e}")
-        # If historical API fails, try to get current weather as fallback
-        if days_ago <= 1:
-            return get_current_weather()
+        if "401" in str(e):
+            print(f"Historical weather data requires OpenWeather subscription for {date_str}")
+        else:
+            print(f"Error fetching historical weather data for {date_str}: {e}")
         return None
     except (KeyError, ValueError, IndexError) as e:
         print(f"Error parsing historical weather data for {date_str}: {e}")
@@ -97,15 +180,29 @@ def get_historical_weather(date_str):
 
 def get_weather_for_date(date_str):
     """Get weather data for any date, using appropriate API based on date."""
-    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-    today = datetime.now().date()
-    target_date = date_obj.date()
-    
-    # If it's today or future, get current weather
-    if target_date >= today:
-        return get_current_weather()
-    else:
-        return get_historical_weather(date_str)
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        today = datetime.now().date()
+        target_date = date_obj.date()
+        days_diff = (target_date - today).days
+        
+        if days_diff > 0:
+            # Future date - get forecast (only available for next 5 days)
+            if days_diff <= 5:
+                return get_forecast_weather(date_str)
+            else:
+                print(f"Forecast not available for {date_str} (too far in future)")
+                return None
+        elif days_diff == 0:
+            # Today - get current weather
+            return get_current_weather()
+        else:
+            # Past date - get historical weather
+            return get_historical_weather(date_str)
+            
+    except ValueError as e:
+        print(f"Invalid date format: {date_str}")
+        return None
 
 def format_weather_summary(weather_data):
     """Format weather data into a human-readable summary."""
@@ -116,12 +213,19 @@ def format_weather_summary(weather_data):
     description = weather_data.get('weather_description', 'Unknown').title()
     humidity = weather_data.get('humidity', 0)
     precipitation = weather_data.get('precipitation', 0)
+    data_type = weather_data.get('data_type', 'unknown')
     
     summary = f"{description}, {temp_range}"
     if humidity > 0:
-        summary += f", {humidity}% humidity"
+        summary += f", {humidity:.0f}% humidity"
     if precipitation > 0:
         summary += f", {precipitation:.1f}mm rain"
+    
+    # Add data type indicator
+    if data_type == 'forecast':
+        summary += " (forecast)"
+    elif data_type == 'historical':
+        summary += " (actual)"
     
     return summary
 
@@ -145,3 +249,21 @@ def get_weather_emoji(weather_main):
         'Tornado': '🌪️'
     }
     return weather_emojis.get(weather_main, '🌤️')
+
+def is_future_date(date_str):
+    """Check if a date is in the future."""
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        today = datetime.now().date()
+        return date_obj > today
+    except ValueError:
+        return False
+
+def is_historical_date(date_str):
+    """Check if a date is in the past."""
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        today = datetime.now().date()
+        return date_obj < today
+    except ValueError:
+        return False
