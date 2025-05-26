@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Entries - Personal Health Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <nav>
+        <a href="{{ url_for('index') }}">➕ New Entry</a>
+      </nav>
+      
+      <main class="main-content">
+        <h1>Health Entries & Weather Data</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
+          Your wellness journey with environmental context
+        </p>
+        
+        {% if entries %}
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>📅 Date</th>
+                <th>😊 Mood</th>
+                <th>⚡ Energy</th>
+                <th>😴 Sleep</th>
+                <th>📝 Notes</th>
+                <th>🌡️ Temp Min</th>
+                <th>🌡️ Temp Max</th>
+                <th>💧 Humidity</th>
+                <th>🌪️ Pressure</th>
+                <th>🌧️ Rain</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for entry in entries %}
+              <tr>
+                <td>
+                  <strong>{{ entry['date'] }}</strong>
+                </td>
+                <td>
+                  <div class="rating">
+                    <span class="rating-value">{{ entry['mood'] }}</span>
+                    <span style="color: var(--text-light);">/5</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="rating">
+                    <span class="rating-value">{{ entry['energy'] }}</span>
+                    <span style="color: var(--text-light);">/5</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="rating">
+                    <span class="rating-value">{{ entry['sleep_quality'] }}</span>
+                    <span style="color: var(--text-light);">/5</span>
+                  </div>
+                </td>
+                <td style="max-width: 200px;">
+                  {% if entry['notes'] %}
+                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ entry['notes'] }}">
+                      {{ entry['notes'] }}
+                    </div>
+                  {% else %}
+                    <span style="color: var(--text-light); font-style: italic;">No notes</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="weather-data temp-min">
+                    {% if entry['temp_min'] %}
+                      {{ "%.1f"|format(entry['temp_min']) }}°C
+                    {% else %}
+                      <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="weather-data temp-max">
+                    {% if entry['temp_max'] %}
+                      {{ "%.1f"|format(entry['temp_max']) }}°C
+                    {% else %}
+                      <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="weather-data">
+                    {% if entry['humidity'] %}
+                      {{ entry['humidity'] }}%
+                    {% else %}
+                      <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="weather-data">
+                    {% if entry['pressure'] %}
+                      {{ entry['pressure'] }} hPa
+                    {% else %}
+                      <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="weather-data">
+                    {% if entry['precipitation'] %}
+                      {{ "%.1f"|format(entry['precipitation']) }} mm
+                    {% else %}
+                      <span style="color: var(--text-light);">0 mm</span>
+                    {% endif %}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+          <p>📊 Showing {{ entries|length }} entries</p>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+          <h2 style="color: var(--text-light); margin-bottom: 1rem;">No entries yet</h2>
+          <p>Start tracking your health by creating your first entry!</p>
+          <a href="{{ url_for('index') }}" class="btn" style="display: inline-block; margin-top: 1rem; width: auto; padding: 0.75rem 2rem;">
+            Create First Entry
+          </a>
+        </div>
+        {% endif %}
+        
+        <div style="text-align: center;">
+          <a href="{{ url_for('index') }}" class="back-link">
+            ← Back to New Entry
+          </a>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Add interactive features
+      document.addEventListener('DOMContentLoaded', function() {
+        // Highlight rows on hover
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+          row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.01)';
+            this.style.zIndex = '10';
+            this.style.position = 'relative';
+          });
+          
+          row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.zIndex = 'auto';
+            this.style.position = 'static';
+          });
+        });
+
+        // Show full notes on click
+        const noteCells = document.querySelectorAll('td[title]');
+        noteCells.forEach(cell => {
+          cell.addEventListener('click', function() {
+            if (this.title) {
+              alert('Notes: ' + this.title);
+            }
+          });
+          cell.style.cursor = 'pointer';
+        });
+      });
+    </script>
+  </body>
+</html>
