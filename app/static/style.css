@@ -209,17 +209,14 @@ nav a:hover,
 }
 
 .day-header.future-date {
-  background: linear-gradient(
-    135deg,
-    #f3f4f6,
-    #e5e7eb
-  );
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
   border: 2px dashed var(--border-color);
   opacity: 0.8;
+  color: dimgray;
 }
 
 .day-header.future-date .weather-info {
-  color: #6b7280;
+  color: gray;
 }
 
 .hour-slot[data-future="true"] {
@@ -287,6 +284,12 @@ nav a:hover,
 .weather-data-type.current {
   background-color: #e0f2fe;
   color: #0891b2;
+}
+
+.moon-phase-info {
+  font-size: 0.7rem;
+  color: #0891b2;
+  font-weight: 500;
 }
 
 .timeline-rows {

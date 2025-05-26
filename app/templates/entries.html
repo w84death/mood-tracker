@@ -29,6 +29,64 @@
 
       <div class="entries-container">
         {% if entries %}
+          <!-- Environmental Patterns Summary -->
+          <div class="patterns-summary">
+            <h2 class="patterns-title">🌍 Environmental Patterns Overview</h2>
+            <div class="patterns-grid">
+              <div class="pattern-card">
+                <span class="pattern-emoji">🌡️</span>
+                <div class="pattern-value">
+                  {% set pressure_days = entries|selectattr('weather.air_pressure')|list %}
+                  {% if pressure_days %}
+                    {{ (pressure_days|map(attribute='weather.air_pressure')|sum / pressure_days|length)|round(0) }}hPa
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </div>
+                <div class="pattern-label">Avg Air Pressure</div>
+              </div>
+              
+              <div class="pattern-card">
+                <span class="pattern-emoji">🌙</span>
+                <div class="pattern-value">
+                  {% set moon_days = entries|selectattr('moon_phase.illumination_percent')|list %}
+                  {% if moon_days %}
+                    {{ (moon_days|map(attribute='moon_phase.illumination_percent')|sum / moon_days|length)|round(0) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </div>
+                <div class="pattern-label">Avg Moon Illumination</div>
+              </div>
+              
+              <div class="pattern-card">
+                <span class="pattern-emoji">💧</span>
+                <div class="pattern-value">
+                  {% set humid_days = entries|selectattr('weather.humidity')|list %}
+                  {% if humid_days %}
+                    {{ (humid_days|map(attribute='weather.humidity')|sum / humid_days|length)|round(0) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </div>
+                <div class="pattern-label">Avg Humidity</div>
+              </div>
+              
+              <div class="pattern-card">
+                <span class="pattern-emoji">😊</span>
+                <div class="pattern-value">
+                  {% set mood_days = entries|selectattr('avg_mood')|list %}
+                  {% if mood_days %}
+                    {{ (mood_days|map(attribute='avg_mood')|sum / mood_days|length)|round(1) }}/5
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </div>
+                <div class="pattern-label">Overall Avg Mood</div>
+              </div>
+            </div>
+          </div>
+
           {% for entry in entries %}
           <div class="day-card">
             <div class="day-header">
@@ -59,8 +117,20 @@
                   <div class="metric-value">{{ entry.weather.temp_min|round(1) }}° - {{ entry.weather.temp_max|round(1) }}°</div>
                   <div class="metric-label">Weather</div>
                   {% if entry.weather.humidity %}
-                  <div class="metric-detail">💧 {{ entry.weather.humidity }}%</div>
+                  <div class="metric-detail">💧 {{ entry.weather.humidity|round(0) }}%</div>
                   {% endif %}
+                  {% if entry.weather.air_pressure %}
+                  <div class="metric-detail">🌡️ {{ entry.weather.air_pressure|round(0) }}hPa</div>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                {% if entry.moon_phase %}
+                <div class="metric-card moon-phase-card">
+                  <span class="metric-emoji">{{ entry.moon_phase.phase_emoji }}</span>
+                  <div class="metric-value">{{ entry.moon_phase.phase_name }}</div>
+                  <div class="metric-label">Moon Phase</div>
+                  <div class="metric-detail">{{ entry.moon_phase.illumination_percent|round(0) }}% visible</div>
                 </div>
                 {% endif %}
 
@@ -109,7 +179,7 @@
               <!-- Weather-Mood Correlation -->
               {% if entry.weather and entry.avg_mood %}
               <div class="correlation-section">
-                <h4 class="section-title">🌡️ Weather & Mood</h4>
+                <h4 class="section-title">🌡️ Weather & Mood Correlation</h4>
                 <div class="correlation-card">
                   <div class="correlation-item">
                     <span>Temperature: {{ entry.weather.temp_min|round(1) }}° - {{ entry.weather.temp_max|round(1) }}°C</span>
@@ -117,11 +187,25 @@
                   </div>
                   {% if entry.weather.humidity %}
                   <div class="correlation-item">
-                    <span>Humidity: {{ entry.weather.humidity }}%</span>
+                    <span>Humidity: {{ entry.weather.humidity|round(0) }}%</span>
                     {% if entry.weather.humidity > 70 %}
                     <span style="color: #888;">High humidity</span>
                     {% elif entry.weather.humidity < 40 %}
                     <span style="color: #888;">Low humidity</span>
+                    {% else %}
+                    <span style="color: #888;">Moderate humidity</span>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if entry.weather.air_pressure %}
+                  <div class="correlation-item">
+                    <span>Air Pressure: {{ entry.weather.air_pressure|round(0) }} hPa</span>
+                    {% if entry.weather.air_pressure > 1020 %}
+                    <span style="color: #059669;">High pressure</span>
+                    {% elif entry.weather.air_pressure < 1000 %}
+                    <span style="color: #dc2626;">Low pressure</span>
+                    {% else %}
+                    <span style="color: #888;">Normal pressure</span>
                     {% endif %}
                   </div>
                   {% endif %}
@@ -129,6 +213,84 @@
                   <div class="correlation-item">
                     <span>Rain: {{ entry.weather.precipitation|round(1) }}mm</span>
                     <span style="color: #4a90e2;">Rainy day</span>
+                  </div>
+                  {% endif %}
+                  {% if entry.moon_phase %}
+                  <div class="correlation-item">
+                    <span>Moon: {{ entry.moon_phase.phase_emoji }} {{ entry.moon_phase.phase_name }}</span>
+                    <span style="color: #6b46c1;">{{ entry.moon_phase.illumination_percent|round(0) }}% visible</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Enhanced Environmental Insights -->
+              {% if (entry.weather or entry.moon_phase) and entry.avg_mood %}
+              <div class="environmental-insights">
+                <h4 class="section-title">🔍 Environmental Insights</h4>
+                <div class="correlation-card">
+                  {% if entry.weather and entry.weather.air_pressure %}
+                  <div class="correlation-item">
+                    <span style="font-weight: 500;">Barometric Impact:</span>
+                    {% if entry.weather.air_pressure > 1020 %}
+                      {% if entry.avg_mood >= 4 %}
+                      <span class="insight-positive">High pressure correlates with good mood ✨</span>
+                      {% else %}
+                      <span class="pressure-indicator pressure-high">High Pressure</span>
+                      {% endif %}
+                    {% elif entry.weather.air_pressure < 1000 %}
+                      {% if entry.avg_mood <= 2 %}
+                      <span class="insight-negative">Low pressure may affect mood ⚠️</span>
+                      {% else %}
+                      <span class="pressure-indicator pressure-low">Low Pressure</span>
+                      {% endif %}
+                    {% else %}
+                    <span class="pressure-indicator pressure-normal">Normal Pressure</span>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if entry.moon_phase %}
+                  <div class="correlation-item">
+                    <span style="font-weight: 500;">Lunar Influence:</span>
+                    {% if entry.moon_phase.phase_name == 'Full Moon' %}
+                      {% if entry.avg_mood >= 4 %}
+                      <span class="insight-positive">Full moon energy aligns with high mood 🌕</span>
+                      {% else %}
+                      <span style="color: #6b46c1;">Full moon - peak lunar energy 🌕</span>
+                      {% endif %}
+                    {% elif entry.moon_phase.phase_name == 'New Moon' %}
+                      {% if entry.avg_mood <= 2 %}
+                      <span style="color: #6b46c1;">New moon - time for reflection 🌑</span>
+                      {% else %}
+                      <span style="color: #6b46c1;">New moon - fresh start energy 🌑</span>
+                      {% endif %}
+                    {% else %}
+                    <span style="color: #6b46c1;">{{ entry.moon_phase.phase_name }} phase ({{ entry.moon_phase.illumination_percent|round(0) }}% visible)</span>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if entry.weather and entry.weather.weather_description %}
+                  <div class="correlation-item">
+                    <span style="font-weight: 500;">Weather Conditions:</span>
+                    <span style="color: #374151;">{{ entry.weather.weather_description|title }}</span>
+                    {% if entry.weather.weather_main == 'Clear' and entry.avg_mood >= 4 %}
+                    <span class="insight-positive">☀️ Clear skies, clear mind!</span>
+                    {% elif entry.weather.weather_main == 'Rain' and entry.avg_mood <= 2 %}
+                    <span class="insight-neutral">🌧️ Rainy day vibes</span>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if entry.weather and entry.weather.humidity %}
+                  <div class="correlation-item">
+                    <span style="font-weight: 500;">Comfort Level:</span>
+                    {% if entry.weather.humidity > 70 and entry.weather.temp_max > 25 %}
+                    <span class="insight-negative">High humidity + heat may feel uncomfortable</span>
+                    {% elif entry.weather.humidity < 30 %}
+                    <span class="insight-neutral">Low humidity - stay hydrated 💧</span>
+                    {% else %}
+                    <span class="insight-neutral">Comfortable humidity levels</span>
+                    {% endif %}
                   </div>
                   {% endif %}
                 </div>
@@ -202,6 +364,11 @@
         border-left: 4px solid #2196f3;
       }
     
+      .moon-phase-card {
+        background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+        border-left: 4px solid #8b5cf6;
+      }
+    
       .metric-detail {
         font-size: 0.7rem;
         color: #666;
@@ -237,6 +404,134 @@
       .correlation-item span:last-child {
         color: #666;
         font-size: 0.8rem;
+      }
+
+      .environmental-insights {
+        background: linear-gradient(135deg, #fefce8, #fef3c7);
+        border-left: 4px solid #eab308;
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+      }
+
+      .environmental-insights .section-title {
+        color: #92400e;
+        margin-bottom: 0.75rem;
+      }
+
+      .environmental-insights .correlation-item {
+        border-bottom: 1px solid #fde68a;
+        padding: 0.5rem 0;
+      }
+
+      .environmental-insights .correlation-item:last-child {
+        border-bottom: none;
+      }
+
+      .insight-positive {
+        color: #059669 !important;
+        font-weight: 500;
+      }
+
+      .insight-negative {
+        color: #dc2626 !important;
+        font-weight: 500;
+      }
+
+      .insight-neutral {
+        color: #6b7280 !important;
+      }
+
+      .pressure-indicator {
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      .pressure-high {
+        background-color: #dcfce7;
+        color: #16a34a;
+      }
+
+      .pressure-low {
+        background-color: #fecaca;
+        color: #dc2626;
+      }
+
+      .pressure-normal {
+        background-color: #f3f4f6;
+        color: #6b7280;
+      }
+
+      .patterns-summary {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .patterns-title {
+        color: #0c4a6e;
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .patterns-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .pattern-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+      }
+
+      .pattern-emoji {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      .pattern-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+      }
+
+      .pattern-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      @media (max-width: 768px) {
+        .patterns-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .patterns-summary {
+          padding: 1rem;
+        }
+        
+        .pattern-value {
+          font-size: 1.25rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .patterns-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
 

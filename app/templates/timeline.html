@@ -60,7 +60,12 @@
                   </div>
                   {% if day.weather.humidity %}
                   <div>
-                    💧 {{ day.weather.humidity }}%
+                    💧 {{ day.weather.humidity|round(0) }}%
+                  </div>
+                  {% endif %}
+                  {% if day.weather.air_pressure %}
+                  <div>
+                    🌡️ {{ day.weather.air_pressure|round(0) }}hPa
                   </div>
                   {% endif %}
                   {% if day.weather.precipitation and day.weather.precipitation > 0 %}
@@ -68,6 +73,13 @@
                     🌧️ {{ day.weather.precipitation|round(1) }}mm
                   </div>
                   {% endif %}
+                </div>
+                {% endif %}
+                {% if day.moon_phase %}
+                <div class="moon-phase-info">
+                  <div style="color: #6b46c1;">
+                    {{ day.moon_phase.phase_emoji }} {{ day.moon_phase.phase_name }}
+                  </div>
                 </div>
                 {% elif day.weather_summary %}
                 <div class="weather-info">
@@ -202,6 +214,96 @@
             >
           </div>
 
+          <div id="energyField" class="form-group" style="display: none">
+            <label class="form-label">Energy Level</label>
+            <select id="energyValue" class="form-select">
+              <option value="">Select your energy level...</option>
+              {% for energy in energy_options %}
+              <option value="{{ energy['value'] }}" {% if energy['value'] == 3 %}selected{% endif %}>
+                {{ energy['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >How energetic do you feel right now?</small
+            >
+          </div>
+
+          <div id="sleepField" class="form-group" style="display: none">
+            <label class="form-label">Sleep Quality</label>
+            <select id="sleepValue" class="form-select">
+              <option value="">Select sleep quality...</option>
+              {% for sleep in sleep_options %}
+              <option value="{{ sleep['value'] }}" {% if sleep['value'] == 3 %}selected{% endif %}>
+                {{ sleep['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >Rate the quality of your last sleep</small
+            >
+          </div>
+
+          <div id="stressField" class="form-group" style="display: none">
+            <label class="form-label">Stress Level</label>
+            <select id="stressValue" class="form-select">
+              <option value="">Select stress level...</option>
+              {% for stress in stress_options %}
+              <option value="{{ stress['value'] }}" {% if stress['value'] == 1 %}selected{% endif %}>
+                {{ stress['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >How stressed do you feel?</small
+            >
+          </div>
+
+          <div id="caffeineField" class="form-group" style="display: none">
+            <label class="form-label">Caffeine Intake</label>
+            <select id="caffeineValue" class="form-select">
+              <option value="">Select caffeine amount...</option>
+              {% for caffeine in caffeine_options %}
+              <option value="{{ caffeine['value'] }}" {% if caffeine['value'] == 1 %}selected{% endif %}>
+                {{ caffeine['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >Number of caffeinated beverages</small
+            >
+          </div>
+
+          <div id="waterField" class="form-group" style="display: none">
+            <label class="form-label">Water Intake</label>
+            <select id="waterValue" class="form-select">
+              <option value="">Select water amount...</option>
+              {% for water in water_options %}
+              <option value="{{ water['value'] }}" {% if water['value'] == 8 %}selected{% endif %}>
+                {{ water['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >Glasses of water consumed</small
+            >
+          </div>
+
+          <div id="alcoholField" class="form-group" style="display: none">
+            <label class="form-label">Alcohol Intake</label>
+            <select id="alcoholValue" class="form-select">
+              <option value="">Select alcohol amount...</option>
+              {% for alcohol in alcohol_options %}
+              <option value="{{ alcohol['value'] }}" {% if alcohol['value'] == 0 %}selected{% endif %}>
+                {{ alcohol['label'] }}
+              </option>
+              {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary)"
+              >Number of alcoholic drinks</small
+            >
+          </div>
+
           <div id="textField" class="form-group" style="display: none">
             <label class="form-label" id="textLabel">Description</label>
             <input type="text" id="textValue" class="form-control" />
@@ -246,7 +348,7 @@
         // Check if this is a future date
         const today = new Date().toISOString().split('T')[0];
         const isFutureDate = date > today;
-        
+
         // Update modal title for future dates
         if (isFutureDate) {
           document.getElementById("modalTitle").textContent =
@@ -258,7 +360,7 @@
 
         // Reset form
         document.getElementById("entryForm").reset();
-        
+
         // Filter entry types for future dates
         filterEntryTypesForDate(isFutureDate);
         updateFormFields();
@@ -305,7 +407,7 @@
       function filterEntryTypesForDate(isFutureDate) {
         const entryTypeSelect = document.getElementById("entryType");
         const options = entryTypeSelect.querySelectorAll("option");
-        
+
         options.forEach(option => {
           if (option.value === "") {
             // Keep the empty "Select entry type..." option
@@ -313,7 +415,7 @@
             option.disabled = false;
             return;
           }
-          
+
           if (isFutureDate) {
             // For future dates, only allow 'notes' entry type
             if (option.value === "notes") {
@@ -329,7 +431,7 @@
             option.disabled = false;
           }
         });
-        
+
         // If current selection is not valid for future dates, reset
         if (isFutureDate && entryTypeSelect.value !== "" && entryTypeSelect.value !== "notes") {
           entryTypeSelect.value = "";
@@ -356,13 +458,48 @@
         // Hide all fields first
         document.getElementById("numericField").style.display = "none";
         document.getElementById("moodField").style.display = "none";
+        document.getElementById("energyField").style.display = "none";
+        document.getElementById("sleepField").style.display = "none";
+        document.getElementById("stressField").style.display = "none";
+        document.getElementById("caffeineField").style.display = "none";
+        document.getElementById("waterField").style.display = "none";
+        document.getElementById("alcoholField").style.display = "none";
         document.getElementById("textField").style.display = "none";
 
         if (valueType === "mood_select") {
           document.getElementById("moodField").style.display = "block";
-          // Set default mood value if specified
           if (defaultValue) {
             document.getElementById("moodValue").value = defaultValue;
+          }
+        } else if (valueType === "energy_select") {
+          document.getElementById("energyField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("energyValue").value = defaultValue;
+          }
+        } else if (valueType === "sleep_select") {
+          document.getElementById("sleepField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("sleepValue").value = defaultValue;
+          }
+        } else if (valueType === "stress_select") {
+          document.getElementById("stressField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("stressValue").value = defaultValue;
+          }
+        } else if (valueType === "caffeine_select") {
+          document.getElementById("caffeineField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("caffeineValue").value = defaultValue;
+          }
+        } else if (valueType === "water_select") {
+          document.getElementById("waterField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("waterValue").value = defaultValue;
+          }
+        } else if (valueType === "alcohol_select") {
+          document.getElementById("alcoholField").style.display = "block";
+          if (defaultValue) {
+            document.getElementById("alcoholValue").value = defaultValue;
           }
         } else if (valueType === "numeric") {
           document.getElementById("numericField").style.display = "block";
@@ -420,6 +557,36 @@
             const moodValue = document.getElementById("moodValue").value;
             if (moodValue) {
               data.numeric_value = parseInt(moodValue);
+            }
+          } else if (valueType === "energy_select") {
+            const energyValue = document.getElementById("energyValue").value;
+            if (energyValue) {
+              data.numeric_value = parseInt(energyValue);
+            }
+          } else if (valueType === "sleep_select") {
+            const sleepValue = document.getElementById("sleepValue").value;
+            if (sleepValue) {
+              data.numeric_value = parseInt(sleepValue);
+            }
+          } else if (valueType === "stress_select") {
+            const stressValue = document.getElementById("stressValue").value;
+            if (stressValue) {
+              data.numeric_value = parseInt(stressValue);
+            }
+          } else if (valueType === "caffeine_select") {
+            const caffeineValue = document.getElementById("caffeineValue").value;
+            if (caffeineValue) {
+              data.numeric_value = parseInt(caffeineValue);
+            }
+          } else if (valueType === "water_select") {
+            const waterValue = document.getElementById("waterValue").value;
+            if (waterValue) {
+              data.numeric_value = parseInt(waterValue);
+            }
+          } else if (valueType === "alcohol_select") {
+            const alcoholValue = document.getElementById("alcoholValue").value;
+            if (alcoholValue) {
+              data.numeric_value = parseInt(alcoholValue);
             }
           } else if (valueType === "numeric") {
             const numericValue = document.getElementById("numericValue").value;

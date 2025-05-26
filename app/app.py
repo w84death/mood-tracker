@@ -23,12 +23,18 @@ def timeline():
     entries = database.get_timeline_data(start_date.isoformat(), end_date.isoformat())
     entry_types = database.get_entry_types()
     mood_options = database.get_mood_options()
+    energy_options = database.get_energy_options()
+    sleep_options = database.get_sleep_options()
+    stress_options = database.get_stress_options()
+    caffeine_options = database.get_caffeine_options()
+    water_options = database.get_water_options()
+    alcohol_options = database.get_alcohol_options()
     
     # Get weather data for the date range
     weather_data = database.get_weather_data_range(start_date.isoformat(), end_date.isoformat())
     weather_by_date = {w['date']: w for w in weather_data}
     
-    # Fetch missing weather data synchronously for now to avoid race conditions
+    # Fetch missing weather and moon phase data synchronously for now to avoid race conditions
     current_date = start_date
     while current_date <= end_date:
         date_str = current_date.isoformat()
@@ -37,6 +43,26 @@ def timeline():
             if weather_info:
                 database.store_weather_data(date_str, weather_info)
                 weather_by_date[date_str] = weather_info
+        
+        # Calculate and store moon phase data
+        moon_phase = database.get_moon_phase_data(date_str)
+        if not moon_phase:
+            moon_data = weather.calculate_moon_phase(date_str)
+            if moon_data:
+                database.store_moon_phase_data(date_str, moon_data['phase_name'], moon_data['illumination_percent'])
+                moon_phase = {
+                    'phase_name': moon_data['phase_name'],
+                    'illumination_percent': moon_data['illumination_percent']
+                }
+        
+        # Add to weather data for easy access
+        if moon_phase:
+            weather_by_date[date_str + '_moon'] = {
+                'phase_name': moon_phase.get('phase_name') if isinstance(moon_phase, dict) else moon_phase['phase_name'],
+                'illumination_percent': moon_phase.get('illumination_percent') if isinstance(moon_phase, dict) else moon_phase['illumination_percent'],
+                'phase_emoji': weather.get_moon_phase_emoji(moon_phase.get('phase_name') if isinstance(moon_phase, dict) else moon_phase['phase_name'])
+            }
+        
         current_date += timedelta(days=1)
     
     # Organize entries by date and hour
@@ -61,12 +87,15 @@ def timeline():
             'notes': entry['notes']
         })
     
-    # Generate date range for template with weather
+    # Generate date range for template with weather and moon phase
     date_range = []
     current_date = start_date
     while current_date <= end_date:
         date_str = current_date.isoformat()
         weather_info = weather_by_date.get(date_str, {})
+        moon_phase_info = database.get_moon_phase_data(date_str)
+        if moon_phase_info:
+            moon_phase_info['phase_emoji'] = weather.get_moon_phase_emoji(moon_phase_info['phase_name'])
         is_future = current_date > today
         date_range.append({
             'date': date_str,
@@ -74,7 +103,8 @@ def timeline():
             'is_today': current_date == today,
             'is_future': is_future,
             'weather': weather_info,
-            'weather_summary': weather.format_weather_summary(weather_info) if weather_info else None
+            'weather_summary': weather.format_weather_summary(weather_info) if weather_info else None,
+            'moon_phase': moon_phase_info
         })
         current_date += timedelta(days=1)
     
@@ -82,7 +112,13 @@ def timeline():
                          timeline_data=timeline_data,
                          date_range=date_range,
                          entry_types=entry_types,
-                         mood_options=mood_options)
+                         mood_options=mood_options,
+                         energy_options=energy_options,
+                         sleep_options=sleep_options,
+                         stress_options=stress_options,
+                         caffeine_options=caffeine_options,
+                         water_options=water_options,
+                         alcohol_options=alcohol_options)
 
 @app.route('/api/add_entry', methods=['POST'])
 def add_entry():
@@ -181,7 +217,7 @@ def view_entries():
     weather_data = database.get_weather_data_range(start_date.isoformat(), today.isoformat())
     weather_by_date = {w['date']: w for w in weather_data}
     
-    # Fetch missing weather data synchronously
+    # Fetch missing weather and moon phase data synchronously
     current_date = start_date
     while current_date <= today:
         date_str = current_date.isoformat()
@@ -190,6 +226,14 @@ def view_entries():
             if weather_info:
                 database.store_weather_data(date_str, weather_info)
                 weather_by_date[date_str] = weather_info
+        
+        # Calculate and store moon phase data
+        moon_phase = database.get_moon_phase_data(date_str)
+        if not moon_phase:
+            moon_data = weather.calculate_moon_phase(date_str)
+            if moon_data:
+                database.store_moon_phase_data(date_str, moon_data['phase_name'], moon_data['illumination_percent'])
+        
         current_date += timedelta(days=1)
     
     entries = database.get_timeline_data(start_date.isoformat(), today.isoformat())
@@ -209,7 +253,8 @@ def view_entries():
                 'stress_values': [],
                 'sleep_quality': None,
                 'notes': [],
-                'weather': weather_by_date.get(date_key, {})
+                'weather': weather_by_date.get(date_key, {}),
+                'moon_phase': weather_by_date.get(date_key + '_moon', {})
             }
         
         daily_summaries[date_key]['entries'].append(entry)
@@ -235,6 +280,10 @@ def view_entries():
         
         # Add weather summary
         summary['weather_summary'] = weather.format_weather_summary(summary['weather']) if summary['weather'] else None
+        
+        # Add moon phase summary
+        if summary['moon_phase']:
+            summary['moon_phase_summary'] = f"{summary['moon_phase']['phase_emoji']} {summary['moon_phase']['phase_name']} ({summary['moon_phase']['illumination_percent']:.0f}% visible)"
     
     # Convert to list and sort by date (newest first)
     summaries_list = list(daily_summaries.values())
@@ -255,6 +304,12 @@ def load_timeline():
         entries = database.get_timeline_data(start_date, end_date)
         entry_types = database.get_entry_types()
         mood_options = database.get_mood_options()
+        energy_options = database.get_energy_options()
+        sleep_options = database.get_sleep_options()
+        stress_options = database.get_stress_options()
+        caffeine_options = database.get_caffeine_options()
+        water_options = database.get_water_options()
+        alcohol_options = database.get_alcohol_options()
         
         # Get weather data for the range
         weather_data = database.get_weather_data_range(start_date, end_date)
@@ -286,6 +341,12 @@ def load_timeline():
             'timeline_data': timeline_data,
             'entry_types': [dict(et) for et in entry_types],
             'mood_options': mood_options,
+            'energy_options': energy_options,
+            'sleep_options': sleep_options,
+            'stress_options': stress_options,
+            'caffeine_options': caffeine_options,
+            'water_options': water_options,
+            'alcohol_options': alcohol_options,
             'weather_data': weather_by_date
         })
     
