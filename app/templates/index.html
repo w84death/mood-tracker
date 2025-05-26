@@ -22,9 +22,9 @@
       </nav>
       
       <main class="main-content">
-        <h1>Daily Health Entry</h1>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
-          Track your daily wellness metrics to better understand your health patterns
+        <h1>✨ Daily Health Entry</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+          Track your daily wellness metrics to better understand your health patterns and improve your overall well-being
         </p>
         
         <form action="/submit" method="post">
@@ -129,16 +129,45 @@
       // Set today's date as default
       document.getElementById('date').valueAsDate = new Date();
       
-      // Add smooth interactions
+      // Enhanced form interactions
       const inputs = document.querySelectorAll('input, textarea');
       inputs.forEach(input => {
         input.addEventListener('focus', function() {
-          this.style.transform = 'translateY(-1px)';
+          this.style.transform = 'translateY(-2px)';
+          this.parentElement.style.zIndex = '10';
         });
         
         input.addEventListener('blur', function() {
           this.style.transform = 'translateY(0)';
+          this.parentElement.style.zIndex = 'auto';
         });
+
+        // Add real-time validation feedback
+        input.addEventListener('input', function() {
+          if (this.checkValidity()) {
+            this.style.borderColor = 'var(--success-color)';
+          } else {
+            this.style.borderColor = 'var(--error-color)';
+          }
+        });
+      });
+
+      // Add smooth submission animation
+      const form = document.querySelector('form');
+      const submitBtn = document.querySelector('input[type="submit"]');
+      
+      form.addEventListener('submit', function(e) {
+        submitBtn.innerHTML = 'Submitting...';
+        submitBtn.style.background = 'var(--secondary-color)';
+      });
+
+      // Add loading animation for better UX
+      window.addEventListener('load', function() {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          document.body.style.opacity = '1';
+        }, 100);
       });
     </script>
   </body>

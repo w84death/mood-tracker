@@ -22,9 +22,9 @@
       </nav>
       
       <main class="main-content">
-        <h1>Health Entries & Weather Data</h1>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
-          Your wellness journey with environmental context
+        <h1>📊 Health Analytics Dashboard</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+          Your comprehensive wellness journey with environmental context and trend analysis
         </p>
         
         {% if entries %}
@@ -68,9 +68,9 @@
                     <span style="color: var(--text-light);">/5</span>
                   </div>
                 </td>
-                <td style="max-width: 200px;">
+                <td class="notes-cell">
                   {% if entry['notes'] %}
-                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ entry['notes'] }}">
+                    <div class="notes-preview" title="{{ entry['notes'] }}">
                       {{ entry['notes'] }}
                     </div>
                   {% else %}
@@ -129,19 +129,23 @@
         </div>
         
         <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
-          <p>📊 Showing {{ entries|length }} entries</p>
+          <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--background-tertiary); padding: 0.75rem 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light);">
+            <span style="font-weight: 600;">📊 Total Entries:</span>
+            <span style="color: var(--primary-color); font-weight: 700;">{{ entries|length }}</span>
+          </div>
         </div>
         {% else %}
-        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-          <h2 style="color: var(--text-light); margin-bottom: 1rem;">No entries yet</h2>
-          <p>Start tracking your health by creating your first entry!</p>
-          <a href="{{ url_for('index') }}" class="btn" style="display: inline-block; margin-top: 1rem; width: auto; padding: 0.75rem 2rem;">
-            Create First Entry
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <h2>No entries yet</h2>
+          <p>Start your wellness journey by creating your first health entry. Track your mood, energy, sleep, and other important metrics to gain insights into your well-being.</p>
+          <a href="{{ url_for('index') }}" class="btn" style="display: inline-block; margin-top: 1rem; width: auto; padding: 1rem 2rem;">
+            🚀 Create First Entry
           </a>
         </div>
         {% endif %}
         
-        <div style="text-align: center;">
+        <div style="text-align: center; margin-top: 3rem;">
           <a href="{{ url_for('index') }}" class="back-link">
             ← Back to New Entry
           </a>
@@ -150,35 +154,133 @@
     </div>
 
     <script>
-      // Add interactive features
+      // Enhanced interactive features
       document.addEventListener('DOMContentLoaded', function() {
-        // Highlight rows on hover
+        // Improved table row interactions
         const rows = document.querySelectorAll('tbody tr');
         rows.forEach(row => {
           row.addEventListener('mouseenter', function() {
             this.style.transform = 'scale(1.01)';
             this.style.zIndex = '10';
             this.style.position = 'relative';
+            this.style.boxShadow = 'var(--shadow-lg)';
           });
           
           row.addEventListener('mouseleave', function() {
             this.style.transform = 'scale(1)';
             this.style.zIndex = 'auto';
             this.style.position = 'static';
+            this.style.boxShadow = 'none';
           });
         });
 
-        // Show full notes on click
-        const noteCells = document.querySelectorAll('td[title]');
+        // Enhanced notes interaction
+        const noteCells = document.querySelectorAll('.notes-preview[title]');
         noteCells.forEach(cell => {
           cell.addEventListener('click', function() {
             if (this.title) {
-              alert('Notes: ' + this.title);
+              // Create a modal-like overlay for better notes viewing
+              const modal = document.createElement('div');
+              modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                backdrop-filter: blur(4px);
+              `;
+              
+              const content = document.createElement('div');
+              content.style.cssText = `
+                background: var(--background-card);
+                padding: 2rem;
+                border-radius: var(--radius-lg);
+                max-width: 500px;
+                max-height: 300px;
+                overflow-y: auto;
+                box-shadow: var(--shadow-xl);
+                border: 1px solid var(--border-light);
+              `;
+              
+              content.innerHTML = `
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📝 Notes</h3>
+                <p style="line-height: 1.6; color: var(--text-primary);">${this.title}</p>
+                <button onclick="this.closest('.modal').remove()" style="
+                  margin-top: 1.5rem;
+                  padding: 0.5rem 1rem;
+                  background: var(--primary-color);
+                  color: white;
+                  border: none;
+                  border-radius: var(--radius-md);
+                  cursor: pointer;
+                  font-weight: 600;
+                ">Close</button>
+              `;
+              
+              modal.className = 'modal';
+              modal.appendChild(content);
+              document.body.appendChild(modal);
+              
+              modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                  modal.remove();
+                }
+              });
             }
           });
-          cell.style.cursor = 'pointer';
         });
+
+        // Add smooth loading animation
+        const mainContent = document.querySelector('.main-content');
+        mainContent.style.opacity = '0';
+        mainContent.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+          mainContent.style.transition = 'all 0.6s ease-out';
+          mainContent.style.opacity = '1';
+          mainContent.style.transform = 'translateY(0)';
+        }, 100);
+
+        // Add table scroll indicator
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+          const table = tableContainer.querySelector('table');
+          if (table.scrollWidth > tableContainer.clientWidth) {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+              position: absolute;
+              top: 50%;
+              right: 1rem;
+              transform: translateY(-50%);
+              background: var(--primary-color);
+              color: white;
+              padding: 0.5rem;
+              border-radius: 50%;
+              font-size: 0.75rem;
+              animation: pulse 2s infinite;
+            `;
+            indicator.innerHTML = '→';
+            indicator.title = 'Scroll horizontally to see more data';
+            tableContainer.style.position = 'relative';
+            tableContainer.appendChild(indicator);
+          }
+        }
       });
+
+      // Add CSS animation for pulse effect
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `;
+      document.head.appendChild(style);
     </script>
   </body>
 </html>
