@@ -314,9 +314,6 @@
           }
 
           let helpText = description;
-          if (min && max) {
-            helpText += ` (Range: ${min}-${max})`;
-          }
           document.getElementById("numericHelp").textContent = helpText;
         } else if (valueType === "text") {
           document.getElementById("textField").style.display = "block";
