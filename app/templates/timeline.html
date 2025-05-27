@@ -67,6 +67,16 @@
                     🌧️ {{ day.weather.precipitation|round(1) }}mm
                   </div>
                   {% endif %}
+                  {% if day.weather.aqi %}
+                  <div>
+                    🍃 AQI {{ day.weather.aqi }} ({{ day.weather.aqi_description }})
+                  </div>
+                  {% endif %}
+                  {% if day.weather.daylight_hours %}
+                  <div>
+                    ☀️ {{ day.weather.daylight_hours|round(1) }}h daylight
+                  </div>
+                  {% endif %}
                 </div>
                 {% endif %}
                 {% if day.moon_phase %}

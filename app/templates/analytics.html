@@ -60,6 +60,16 @@
             <div class="stat-value" id="avgTemp">-</div>
             <div class="stat-label">Avg Temperature</div>
           </div>
+          <div class="stat-card">
+            <span class="stat-emoji">🍃</span>
+            <div class="stat-value" id="avgAQI">-</div>
+            <div class="stat-label">Avg Air Quality</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-emoji">☀️</span>
+            <div class="stat-value" id="avgDaylight">-</div>
+            <div class="stat-label">Avg Daylight</div>
+          </div>
         </div>
 
         <!-- Charts -->
@@ -91,7 +101,13 @@
           <!-- Energy vs Weather -->
           <div class="chart-container">
             <h3 class="chart-title">⚡ Energy vs Environmental</h3>
-            <canvas id="energyEnvironmentalChart"></canvas>
+            <canvas id="environmentalChart"></canvas>
+          </div>
+
+          <!-- Air Quality & Daylight -->
+          <div class="chart-container">
+            <h3 class="chart-title">🍃 Air Quality & Daylight</h3>
+            <canvas id="airQualityChart"></canvas>
           </div>
 
           <!-- Biorhythm Cycles -->
@@ -294,6 +310,8 @@
       const temperatures = dailyData.map(d => d.temperature);
       const humidity = dailyData.map(d => d.humidity);
       const airPressure = dailyData.map(d => d.air_pressure);
+      const airQuality = dailyData.map(d => d.aqi);
+      const daylightHours = dailyData.map(d => d.daylight_hours);
       const moonIllumination = dailyData.map(d => d.moon_illumination);
       
       // Process biorhythm data
@@ -307,6 +325,8 @@
         const validEnergies = energies.filter(e => e !== null);
 
         const validTemps = temperatures.filter(t => t !== null);
+        const validAQI = airQuality.filter(a => a !== null);
+        const validDaylight = daylightHours.filter(d => d !== null);
 
         document.getElementById('avgMood').textContent = validMoods.length ? 
           (validMoods.reduce((a, b) => a + b, 0) / validMoods.length).toFixed(1) + '/5' : 'N/A';
@@ -315,6 +335,10 @@
 
         document.getElementById('avgTemp').textContent = validTemps.length ? 
           (validTemps.reduce((a, b) => a + b, 0) / validTemps.length).toFixed(1) + '°C' : 'N/A';
+        document.getElementById('avgAQI').textContent = validAQI.length ? 
+          (validAQI.reduce((a, b) => a + b, 0) / validAQI.length).toFixed(1) : 'N/A';
+        document.getElementById('avgDaylight').textContent = validDaylight.length ? 
+          (validDaylight.reduce((a, b) => a + b, 0) / validDaylight.length).toFixed(1) + 'h' : 'N/A';
       }
 
       // Chart configurations
@@ -424,6 +448,67 @@
                 },
                 grid: {
                   color: 'rgba(0, 0, 0, 0.1)'
+                }
+              }
+            }
+          }
+        });
+
+        // Air Quality & Daylight Chart
+        const aqiRange = getDataRange(airQuality, 1, 5);
+        const daylightRange = getDataRange(daylightHours, 0, 24);
+        
+        new Chart(document.getElementById('airQualityChart'), {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Air Quality Index',
+              data: airQuality,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              yAxisID: 'y',
+              tension: 0.4,
+              fill: false
+            }, {
+              label: 'Daylight Hours',
+              data: daylightHours,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              yAxisID: 'y1',
+              tension: 0.4,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                min: aqiRange.min,
+                max: aqiRange.max,
+                title: {
+                  display: true,
+                  text: 'Air Quality Index'
+                },
+                grid: {
+                  drawOnChartArea: false,
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                min: daylightRange.min,
+                max: daylightRange.max,
+                title: {
+                  display: true,
+                  text: 'Daylight Hours'
+                },
+                grid: {
+                  drawOnChartArea: false,
                 }
               }
             }
@@ -829,6 +914,44 @@
               insights.push({
                 title: '🌀 Barometric Pressure & Energy',
                 text: `Your energy levels tend to be ${diff.toFixed(1)} points ${highAvg > lowAvg ? 'higher' : 'lower'} on ${better} air pressure days.`
+              });
+            }
+          }
+        }
+
+        // Air quality correlation with mood
+        const aqiMoodData = dailyData.filter(d => d.aqi && d.avg_mood);
+        if (aqiMoodData.length > 5) {
+          const goodAir = aqiMoodData.filter(d => d.aqi <= 2).map(d => d.avg_mood);
+          const poorAir = aqiMoodData.filter(d => d.aqi >= 4).map(d => d.avg_mood);
+          
+          if (goodAir.length > 0 && poorAir.length > 0) {
+            const goodAvg = goodAir.reduce((a, b) => a + b) / goodAir.length;
+            const poorAvg = poorAir.reduce((a, b) => a + b) / poorAir.length;
+            
+            if (Math.abs(goodAvg - poorAvg) > 0.3) {
+              insights.push({
+                title: '🍃 Air Quality & Mood',
+                text: `Your mood is ${(goodAvg - poorAvg).toFixed(1)} points higher on days with good air quality (AQI 1-2) compared to poor air quality days (AQI 4-5).`
+              });
+            }
+          }
+        }
+
+        // Daylight hours correlation with energy
+        const daylightEnergyData = dailyData.filter(d => d.daylight_hours && d.avg_energy);
+        if (daylightEnergyData.length > 5) {
+          const longDays = daylightEnergyData.filter(d => d.daylight_hours > 12).map(d => d.avg_energy);
+          const shortDays = daylightEnergyData.filter(d => d.daylight_hours < 8).map(d => d.avg_energy);
+          
+          if (longDays.length > 0 && shortDays.length > 0) {
+            const longAvg = longDays.reduce((a, b) => a + b) / longDays.length;
+            const shortAvg = shortDays.reduce((a, b) => a + b) / shortDays.length;
+            
+            if (Math.abs(longAvg - shortAvg) > 0.3) {
+              insights.push({
+                title: '☀️ Daylight & Energy',
+                text: `Your energy levels are ${(longAvg - shortAvg).toFixed(1)} points ${longAvg > shortAvg ? 'higher' : 'lower'} on longer daylight days (>12h) compared to shorter days (<8h).`
               });
             }
           }

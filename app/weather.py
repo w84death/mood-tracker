@@ -3,6 +3,7 @@ import os
 import math
 from datetime import datetime, timedelta
 import time
+import calendar
 
 API_KEY = os.getenv('OPENWEATHER_API_KEY')
 LAT = os.getenv('LATITUDE', '52.4064')  # Poznań, Poland
@@ -21,6 +22,13 @@ def get_current_weather():
         data = response.json()
 
         # Extract relevant weather data
+        # Calculate daylight hours from sunrise/sunset
+        sunrise = data.get('sys', {}).get('sunrise', 0)
+        sunset = data.get('sys', {}).get('sunset', 0)
+        daylight_hours = 0
+        if sunrise and sunset:
+            daylight_hours = (sunset - sunrise) / 3600  # Convert seconds to hours
+
         weather_data = {
             'temp_min': data['main']['temp_min'],
             'temp_max': data['main']['temp_max'],
@@ -33,6 +41,7 @@ def get_current_weather():
             'wind_speed': data.get('wind', {}).get('speed', 0),
             'clouds': data.get('clouds', {}).get('all', 0),
             'air_pressure': data['main']['pressure'],
+            'daylight_hours': round(daylight_hours, 2),
             'data_type': 'current'
         }
         return weather_data
@@ -83,6 +92,9 @@ def get_forecast_weather(date_str):
             # Get description from first forecast with the most common condition
             description = next(f['weather'][0]['description'] for f in day_forecasts if f['weather'][0]['main'] == most_common_condition)
 
+            # Calculate estimated daylight hours for forecast date
+            daylight_hours = calculate_daylight_hours(date_str, float(LAT))
+
             weather_data = {
                 'temp_min': min(temps),
                 'temp_max': max(temps),
@@ -95,6 +107,7 @@ def get_forecast_weather(date_str):
                 'wind_speed': sum(f.get('wind', {}).get('speed', 0) for f in day_forecasts) / len(day_forecasts),
                 'clouds': sum(f.get('clouds', {}).get('all', 0) for f in day_forecasts) / len(day_forecasts),
                 'air_pressure': sum(f['main']['pressure'] for f in day_forecasts) / len(day_forecasts),
+                'daylight_hours': daylight_hours,
                 'data_type': 'forecast'
             }
             return weather_data
@@ -153,6 +166,9 @@ def get_historical_weather(date_str):
             else:
                 temp_min = temp_max = temp_current = 0
 
+            # Calculate daylight hours for historical date
+            daylight_hours = calculate_daylight_hours(date_str, float(LAT))
+
             weather_data = {
                 'temp_min': temp_min,
                 'temp_max': temp_max,
@@ -165,6 +181,7 @@ def get_historical_weather(date_str):
                 'wind_speed': day_data.get('wind_speed', 0),
                 'clouds': day_data.get('clouds', 0),
                 'air_pressure': day_data.get('pressure', 0),
+                'daylight_hours': daylight_hours,
                 'data_type': 'historical'
             }
             return weather_data
@@ -190,19 +207,28 @@ def get_weather_for_date(date_str):
         target_date = date_obj.date()
         days_diff = (target_date - today).days
 
+        weather_data = None
         if days_diff > 0:
             # Future date - get forecast (only available for next 5 days)
             if days_diff <= 5:
-                return get_forecast_weather(date_str)
+                weather_data = get_forecast_weather(date_str)
             else:
                 print(f"Forecast not available for {date_str} (too far in future)")
                 return None
         elif days_diff == 0:
             # Today - get current weather
-            return get_current_weather()
+            weather_data = get_current_weather()
         else:
             # Past date - get historical weather
-            return get_historical_weather(date_str)
+            weather_data = get_historical_weather(date_str)
+
+        # Add air pollution data if weather data was successfully retrieved
+        if weather_data:
+            air_pollution = get_air_pollution_for_date(date_str)
+            if air_pollution:
+                weather_data.update(air_pollution)
+
+        return weather_data
 
     except ValueError as e:
         print(f"Invalid date format: {date_str}")
@@ -225,6 +251,9 @@ def format_weather_summary(weather_data):
     precipitation = weather_data.get('precipitation', 0) or 0
     air_pressure = weather_data.get('air_pressure', 0) or 0
     data_type = weather_data.get('data_type', 'unknown')
+    aqi = weather_data.get('aqi')
+    aqi_description = weather_data.get('aqi_description')
+    daylight_hours = weather_data.get('daylight_hours', 0) or 0
     
     summary = f"{description}, {temp_range}"
     if humidity and humidity > 0:
@@ -233,6 +262,11 @@ def format_weather_summary(weather_data):
         summary += f", {air_pressure:.0f}hPa"
     if precipitation and precipitation > 0:
         summary += f", {precipitation:.1f}mm rain"
+    if aqi and aqi_description:
+        aqi_emoji = get_aqi_emoji(aqi)
+        summary += f", {aqi_emoji} {aqi_description} air"
+    if daylight_hours and daylight_hours > 0:
+        summary += f", ☀️ {daylight_hours:.1f}h daylight"
     
     # Add data type indicator
     if data_type == 'forecast':
@@ -355,3 +389,122 @@ def is_historical_date(date_str):
         return date_obj < today
     except ValueError:
         return False
+
+def get_air_pollution_for_date(date_str):
+    """Get air pollution data for a specific date."""
+    if not API_KEY:
+        print("Warning: OPENWEATHER_API_KEY not set")
+        return None
+
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        today = datetime.now().date()
+        target_date = date_obj.date()
+        days_diff = (target_date - today).days
+
+        if days_diff == 0:
+            # Current air pollution
+            url = f'http://api.openweathermap.org/data/2.5/air_pollution?lat={LAT}&lon={LON}&appid={API_KEY}'
+        elif days_diff > 0 and days_diff <= 5:
+            # Forecast air pollution (available for next 5 days)
+            url = f'http://api.openweathermap.org/data/2.5/air_pollution/forecast?lat={LAT}&lon={LON}&appid={API_KEY}'
+        else:
+            # Historical air pollution (requires paid plan for dates > 5 days ago)
+            # Use current date timestamp at noon for historical data
+            timestamp = int(date_obj.replace(hour=12).timestamp())
+            url = f'http://api.openweathermap.org/data/2.5/air_pollution/history?lat={LAT}&lon={LON}&start={timestamp}&end={timestamp}&appid={API_KEY}'
+
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'list' in data and len(data['list']) > 0:
+            pollution_data = data['list'][0]  # Get first entry
+            
+            # For forecast data, find the entry closest to the target date
+            if days_diff > 0 and days_diff <= 5:
+                target_timestamp = date_obj.replace(hour=12).timestamp()
+                closest_entry = min(data['list'], 
+                                   key=lambda x: abs(x['dt'] - target_timestamp))
+                pollution_data = closest_entry
+
+            aqi = pollution_data.get('main', {}).get('aqi', 0)
+            components = pollution_data.get('components', {})
+            
+            return {
+                'aqi': aqi,
+                'aqi_description': get_aqi_description(aqi),
+                'pm2_5': components.get('pm2_5', 0),
+                'pm10': components.get('pm10', 0),
+                'no2': components.get('no2', 0),
+                'o3': components.get('o3', 0),
+                'co': components.get('co', 0)
+            }
+        else:
+            print(f"No air pollution data available for {date_str}")
+            return None
+
+    except requests.RequestException as e:
+        if "401" in str(e):
+            print(f"Air pollution data may require OpenWeather subscription for {date_str}")
+        else:
+            print(f"Error fetching air pollution data for {date_str}: {e}")
+        return None
+    except (KeyError, ValueError, IndexError) as e:
+        print(f"Error parsing air pollution data for {date_str}: {e}")
+        return None
+
+def get_aqi_description(aqi):
+    """Convert AQI number to description."""
+    aqi_descriptions = {
+        1: "Good",
+        2: "Fair", 
+        3: "Moderate",
+        4: "Poor",
+        5: "Very Poor"
+    }
+    return aqi_descriptions.get(aqi, "Unknown")
+
+def get_aqi_emoji(aqi):
+    """Get emoji for air quality index."""
+    aqi_emojis = {
+        1: "🟢",  # Good
+        2: "🟡",  # Fair
+        3: "🟠",  # Moderate
+        4: "🔴",  # Poor
+        5: "🟣"   # Very Poor
+    }
+    return aqi_emojis.get(aqi, "⚪")
+
+def calculate_daylight_hours(date_str, latitude):
+    """Calculate daylight hours for a given date and latitude."""
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        
+        # Day of year
+        day_of_year = date_obj.timetuple().tm_yday
+        
+        # Solar declination angle
+        declination = 23.45 * math.sin(math.radians(360 * (284 + day_of_year) / 365))
+        
+        # Hour angle
+        lat_rad = math.radians(latitude)
+        decl_rad = math.radians(declination)
+        
+        # Calculate sunrise hour angle
+        cos_hour_angle = -math.tan(lat_rad) * math.tan(decl_rad)
+        
+        # Check for polar day or polar night
+        if cos_hour_angle > 1:
+            return 0  # Polar night
+        elif cos_hour_angle < -1:
+            return 24  # Polar day
+        
+        hour_angle = math.degrees(math.acos(cos_hour_angle))
+        daylight_hours = 2 * hour_angle / 15  # Convert to hours
+        
+        return round(daylight_hours, 2)
+        
+    except (ValueError, ZeroDivisionError) as e:
+        print(f"Error calculating daylight hours for {date_str}: {e}")
+        return 0

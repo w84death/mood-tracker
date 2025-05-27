@@ -510,6 +510,8 @@ def analytics():
                 'temperature': temperature,
                 'humidity': weather.get('humidity'),
                 'air_pressure': weather.get('air_pressure'),
+                'aqi': weather.get('aqi'),
+                'daylight_hours': weather.get('daylight_hours'),
                 'moon_illumination': moon.get('illumination_percent'),
                 'weather_main': weather.get('weather_main'),
                 'precipitation': weather.get('precipitation', 0),

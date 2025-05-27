@@ -55,7 +55,6 @@
             </div>
 
             <div class="pattern-card">
-              <span class="pattern-emoji">💧</span>
               <div class="pattern-value">
                 {% set humid_days = entries|selectattr('weather.humidity')|list
                 %} {% if humid_days %} {{
@@ -63,6 +62,26 @@
                 humid_days|length)|round(0) }}% {% else %} N/A {% endif %}
               </div>
               <div class="pattern-label">Avg Humidity</div>
+            </div>
+
+            <div class="pattern-card">
+              <div class="pattern-value">
+                {% set aqi_days = entries|selectattr('weather.aqi')|list
+                %} {% if aqi_days %} {{
+                (aqi_days|map(attribute='weather.aqi')|sum /
+                aqi_days|length)|round(1) }} {% else %} N/A {% endif %}
+              </div>
+              <div class="pattern-label">Avg Air Quality</div>
+            </div>
+
+            <div class="pattern-card">
+              <div class="pattern-value">
+                {% set daylight_days = entries|selectattr('weather.daylight_hours')|list
+                %} {% if daylight_days %} {{
+                (daylight_days|map(attribute='weather.daylight_hours')|sum /
+                daylight_days|length)|round(1) }}h {% else %} N/A {% endif %}
+              </div>
+              <div class="pattern-label">Avg Daylight</div>
             </div>
 
             <div class="pattern-card">
@@ -110,6 +129,16 @@
                 {% endif %} {% if entry.weather.air_pressure %}
                 <div class="metric-detail">
                   🌡️ {{ entry.weather.air_pressure|round(0) }}hPa
+                </div>
+                {% endif %}
+                {% if entry.weather.aqi %}
+                <div class="metric-detail">
+                  🍃 AQI {{ entry.weather.aqi }} ({{ entry.weather.aqi_description }})
+                </div>
+                {% endif %}
+                {% if entry.weather.daylight_hours %}
+                <div class="metric-detail">
+                  ☀️ {{ entry.weather.daylight_hours|round(1) }}h daylight
                 </div>
                 {% endif %}
               </div>
@@ -232,6 +261,28 @@
                   <span style="color: #dc2626">Low pressure</span>
                   {% else %}
                   <span style="color: #888">Normal pressure</span>
+                  {% endif %}
+                </div>
+                {% endif %} {% if entry.weather.aqi %}
+                <div class="correlation-item">
+                  <span>Air Quality: AQI {{ entry.weather.aqi }} ({{ entry.weather.aqi_description }})</span>
+                  {% if entry.weather.aqi <= 2 %}
+                  <span style="color: #059669">Good air quality</span>
+                  {% elif entry.weather.aqi == 3 %}
+                  <span style="color: #d97706">Moderate air quality</span>
+                  {% else %}
+                  <span style="color: #dc2626">Poor air quality</span>
+                  {% endif %}
+                </div>
+                {% endif %} {% if entry.weather.daylight_hours %}
+                <div class="correlation-item">
+                  <span>Daylight: {{ entry.weather.daylight_hours|round(1) }} hours</span>
+                  {% if entry.weather.daylight_hours > 12 %}
+                  <span style="color: #059669">Long day</span>
+                  {% elif entry.weather.daylight_hours < 8 %}
+                  <span style="color: #888">Short day</span>
+                  {% else %}
+                  <span style="color: #888">Moderate day</span>
                   {% endif %}
                 </div>
                 {% endif %} {% if entry.weather.precipitation and

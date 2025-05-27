@@ -47,9 +47,15 @@ Navigate to [http://localhost:8080](http://localhost:8080)
 - **Responsive design**: Mobile-first approach
 - **Progressive enhancement**: Works without JavaScript
 
-## 🌤️ Weather Integration
+## 🌤️ Weather & Environmental Integration
 
-The mood tracker automatically fetches weather data to help correlate environmental factors with your mood and energy levels.
+The mood tracker automatically fetches comprehensive environmental data to help correlate external factors with your mood and energy levels.
+
+### Environmental Data Tracked
+- **Weather Conditions**: Temperature, humidity, precipitation, air pressure
+- **Air Quality**: AQI (Air Quality Index) with pollutant levels (PM2.5, PM10, NO2, O3, CO)
+- **Daylight Hours**: Calculated sunrise to sunset duration based on your location
+- **Moon Phases**: Lunar cycle tracking with illumination percentage
 
 ### Setup Weather API
 1. **Get OpenWeather API Key**:
@@ -68,6 +74,12 @@ OPENWEATHER_API_KEY=your_actual_api_key_here
 LATITUDE=your_latitude
 LONGITUDE=your_longitude
 ```
+
+### Features
+- **Timeline View**: See daily weather, air quality, and daylight at a glance
+- **Analytics Dashboard**: Correlate environmental factors with mood and energy
+- **Insights**: Discover patterns between weather conditions and your wellbeing
+- **Historical Data**: Track long-term environmental trends and their impact
 
 ## 📄 License
 

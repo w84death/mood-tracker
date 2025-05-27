@@ -55,7 +55,15 @@ def init_db():
             precipitation REAL,
             air_pressure REAL,
             weather_main TEXT,
-            weather_description TEXT
+            weather_description TEXT,
+            aqi INTEGER,
+            aqi_description TEXT,
+            pm2_5 REAL,
+            pm10 REAL,
+            no2 REAL,
+            o3 REAL,
+            co REAL,
+            daylight_hours REAL
         )
     ''')
     
@@ -72,6 +80,47 @@ def init_db():
     
     try:
         cursor.execute('ALTER TABLE weather ADD COLUMN weather_description TEXT')
+    except:
+        pass  # Column already exists
+    
+    # Add air pollution columns
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN aqi INTEGER')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN aqi_description TEXT')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN pm2_5 REAL')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN pm10 REAL')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN no2 REAL')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN o3 REAL')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN co REAL')
+    except:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('ALTER TABLE weather ADD COLUMN daylight_hours REAL')
     except:
         pass  # Column already exists
 
@@ -236,10 +285,23 @@ def store_weather_data(date_str, weather_data):
     weather_main = weather_data.get('weather_main') or ''
     weather_description = weather_data.get('weather_description') or ''
     
+    # Air pollution data
+    aqi = weather_data.get('aqi')
+    aqi_description = weather_data.get('aqi_description') or ''
+    pm2_5 = weather_data.get('pm2_5')
+    pm10 = weather_data.get('pm10')
+    no2 = weather_data.get('no2')
+    o3 = weather_data.get('o3')
+    co = weather_data.get('co')
+    
+    # Daylight hours
+    daylight_hours = weather_data.get('daylight_hours')
+    
     cursor.execute('''
         INSERT OR REPLACE INTO weather 
-        (date, temp_min, temp_max, humidity, pressure, precipitation, air_pressure, weather_main, weather_description)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (date, temp_min, temp_max, humidity, pressure, precipitation, air_pressure, weather_main, weather_description,
+         aqi, aqi_description, pm2_5, pm10, no2, o3, co, daylight_hours)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         date_str,
         temp_min,
@@ -249,7 +311,15 @@ def store_weather_data(date_str, weather_data):
         precipitation,
         air_pressure,
         weather_main,
-        weather_description
+        weather_description,
+        aqi,
+        aqi_description,
+        pm2_5,
+        pm10,
+        no2,
+        o3,
+        co,
+        daylight_hours
     ))
     
     conn.commit()
