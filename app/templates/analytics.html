@@ -94,6 +94,12 @@
             <canvas id="energyEnvironmentalChart"></canvas>
           </div>
 
+          <!-- Biorhythm Cycles -->
+          <div class="chart-container">
+            <h3 class="chart-title">🔄 Biorhythm Cycles</h3>
+            <canvas id="biorhythmChart"></canvas>
+          </div>
+
           <!-- Moon Phase Correlation -->
           <div class="chart-container">
             <h3 class="chart-title">🌙 Moon Phase Influence</h3>
@@ -284,12 +290,16 @@
       const dates = dailyData.map(d => d.date);
       const moods = dailyData.map(d => d.avg_mood);
       const energies = dailyData.map(d => d.avg_energy);
-
       const sleepQuality = dailyData.map(d => d.sleep_quality);
       const temperatures = dailyData.map(d => d.temperature);
       const humidity = dailyData.map(d => d.humidity);
       const airPressure = dailyData.map(d => d.air_pressure);
       const moonIllumination = dailyData.map(d => d.moon_illumination);
+      
+      // Process biorhythm data
+      const biorhythmPhysical = dailyData.map(d => d.biorhythms ? d.biorhythms.physical?.value : null);
+      const biorhythmEmotional = dailyData.map(d => d.biorhythms ? d.biorhythms.emotional?.value : null);
+      const biorhythmIntellectual = dailyData.map(d => d.biorhythms ? d.biorhythms.intellectual?.value : null);
 
       // Calculate overview stats
       function calculateStats() {
@@ -624,6 +634,66 @@
                 },
                 grid: {
                   color: 'rgba(0, 0, 0, 0.1)'
+                }
+              }
+            }
+          }
+        });
+
+        // Biorhythm Cycles Chart
+        new Chart(document.getElementById('biorhythmChart'), {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Physical (23-day cycle)',
+              data: biorhythmPhysical,
+              borderColor: '#dc2626',
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              tension: 0.4,
+              fill: false
+            }, {
+              label: 'Emotional (28-day cycle)',
+              data: biorhythmEmotional,
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.1)',
+              tension: 0.4,
+              fill: false
+            }, {
+              label: 'Intellectual (33-day cycle)',
+              data: biorhythmIntellectual,
+              borderColor: '#7c3aed',
+              backgroundColor: 'rgba(124, 58, 237, 0.1)',
+              tension: 0.4,
+              fill: false
+            }]
+          },
+          options: {
+            ...chartOptions,
+            scales: {
+              ...chartOptions.scales,
+              y: {
+                min: -1,
+                max: 1,
+                ticks: {
+                  stepSize: 0.5,
+                  callback: function(value) {
+                    if (value === 1) return 'High (+1)';
+                    if (value === 0.5) return '+0.5';
+                    if (value === 0) return 'Critical (0)';
+                    if (value === -0.5) return '-0.5';
+                    if (value === -1) return 'Low (-1)';
+                    return value.toFixed(1);
+                  }
+                },
+                title: {
+                  display: true,
+                  text: 'Biorhythm Value'
+                },
+                grid: {
+                  color: function(context) {
+                    return context.tick.value === 0 ? 'rgba(220, 38, 38, 0.5)' : 'rgba(0, 0, 0, 0.1)';
+                  }
                 }
               }
             }

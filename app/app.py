@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import database
 import weather
+import biorhythm
 from datetime import datetime, timedelta, date
 import threading
 import time
@@ -268,7 +269,8 @@ def view_entries():
                 'sleep_quality': None,
                 'notes': [],
                 'weather': weather_by_date.get(date_key, {}),
-                'moon_phase': weather_by_date.get(date_key + '_moon', {})
+                'moon_phase': weather_by_date.get(date_key + '_moon', {}),
+                'biorhythms': biorhythm.calculate_biorhythms(datetime.strptime(date_key, '%Y-%m-%d').date())
             }
         
         daily_summaries[date_key]['entries'].append(entry)
@@ -453,6 +455,10 @@ def analytics():
         moon_data = [dict(m) for m in moon_data_raw]
         moon_by_date = {m['date']: m for m in moon_data}
         
+        # Get biorhythm data
+        biorhythm_data = biorhythm.get_biorhythm_data_range(start_date, end_date)
+        biorhythm_by_date = {b['date']: b['biorhythms'] for b in biorhythm_data}
+        
         # Process daily summaries for analytics
         daily_data = []
         current_date = start_date
@@ -471,6 +477,7 @@ def analytics():
             # Get weather for this date
             weather = weather_by_date.get(date_str, {})
             moon = moon_by_date.get(date_str, {})
+            biorhythms = biorhythm_by_date.get(date_str, {})
             
             # Calculate average temperature
             temp_min = weather.get('temp_min')
@@ -487,7 +494,8 @@ def analytics():
                 'air_pressure': weather.get('air_pressure'),
                 'moon_illumination': moon.get('illumination_percent'),
                 'weather_main': weather.get('weather_main'),
-                'precipitation': weather.get('precipitation', 0)
+                'precipitation': weather.get('precipitation', 0),
+                'biorhythms': biorhythms
             }
             
             daily_data.append(daily_summary)
