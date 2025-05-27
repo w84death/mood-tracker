@@ -21,8 +21,7 @@
         <h1>📊 Daily Health Summaries</h1>
         <p>Review your health patterns and daily wellness tracking data</p>
 
-        {% set current_page = 'entries' %}
-        {% include 'nav_buttons.html' %}
+        {% set current_page = 'entries' %} {% include 'nav_buttons.html' %}
       </div>
 
       <div class="entries-container">
@@ -46,15 +45,23 @@
             <div class="pattern-card">
               <span class="pattern-emoji">🌡️</span>
               <div class="pattern-value">
-                {% set temp_entries = entries|selectattr('weather.temp_min')|selectattr('weather.temp_max')|list %} 
-                {% if temp_entries %} 
-                {{ ((temp_entries|map(attribute='weather.temp_min')|sum + temp_entries|map(attribute='weather.temp_max')|sum) / (temp_entries|length * 2))|round(1) }}°C 
-                {% else %} N/A {% endif %}
+                {% set temp_entries =
+                entries|selectattr('weather.temp_min')|selectattr('weather.temp_max')|list
+                %} {% set valid_temp_entries = [] %} {% for entry in
+                temp_entries %} {% if entry.weather.temp_min and
+                entry.weather.temp_max and entry.weather.temp_min > 0 %} {% set
+                _ = valid_temp_entries.append(entry) %} {% endif %} {% endfor %}
+                {% if valid_temp_entries %} {{
+                ((valid_temp_entries|map(attribute='weather.temp_min')|sum +
+                valid_temp_entries|map(attribute='weather.temp_max')|sum) /
+                (valid_temp_entries|length * 2))|round(1) }}°C {% else %} N/A {%
+                endif %}
               </div>
               <div class="pattern-label">Avg Temperature</div>
             </div>
 
             <div class="pattern-card">
+              <span class="pattern-emoji">💧</span>
               <div class="pattern-value">
                 {% set humid_days = entries|selectattr('weather.humidity')|list
                 %} {% if humid_days %} {{
@@ -65,19 +72,21 @@
             </div>
 
             <div class="pattern-card">
+              <span class="pattern-emoji">🍃</span>
               <div class="pattern-value">
-                {% set aqi_days = entries|selectattr('weather.aqi')|list
-                %} {% if aqi_days %} {{
-                (aqi_days|map(attribute='weather.aqi')|sum /
+                {% set aqi_days = entries|selectattr('weather.aqi')|list %} {%
+                if aqi_days %} {{ (aqi_days|map(attribute='weather.aqi')|sum /
                 aqi_days|length)|round(1) }} {% else %} N/A {% endif %}
               </div>
               <div class="pattern-label">Avg Air Quality</div>
             </div>
 
             <div class="pattern-card">
+              <span class="pattern-emoji">☀️</span>
               <div class="pattern-value">
-                {% set daylight_days = entries|selectattr('weather.daylight_hours')|list
-                %} {% if daylight_days %} {{
+                {% set daylight_days =
+                entries|selectattr('weather.daylight_hours')|list %} {% if
+                daylight_days %} {{
                 (daylight_days|map(attribute='weather.daylight_hours')|sum /
                 daylight_days|length)|round(1) }}h {% else %} N/A {% endif %}
               </div>
@@ -118,8 +127,10 @@
               <div class="metric-card weather-card">
                 <span class="metric-emoji">🌤️</span>
                 <div class="metric-value">
-                  {{ entry.weather.temp_min|round(1) }}° - {{
-                  entry.weather.temp_max|round(1) }}°
+                  {% if entry.weather.temp_min and entry.weather.temp_max %} {{
+                  entry.weather.temp_min|round(1) }}° - {{
+                  entry.weather.temp_max|round(1) }}° {% else %} No temp data {%
+                  endif %}
                 </div>
                 <div class="metric-label">Weather</div>
                 {% if entry.weather.humidity %}
@@ -130,13 +141,12 @@
                 <div class="metric-detail">
                   🌡️ {{ entry.weather.air_pressure|round(0) }}hPa
                 </div>
-                {% endif %}
-                {% if entry.weather.aqi %}
+                {% endif %} {% if entry.weather.aqi %}
                 <div class="metric-detail">
-                  🍃 AQI {{ entry.weather.aqi }} ({{ entry.weather.aqi_description }})
+                  🍃 AQI {{ entry.weather.aqi }} ({{
+                  entry.weather.aqi_description }})
                 </div>
-                {% endif %}
-                {% if entry.weather.daylight_hours %}
+                {% endif %} {% if entry.weather.daylight_hours %}
                 <div class="metric-detail">
                   ☀️ {{ entry.weather.daylight_hours|round(1) }}h daylight
                 </div>
@@ -192,7 +202,7 @@
                 <div class="metric-label">Sleep</div>
               </div>
               {% endif %}
-              
+
               <!-- Biorhythm Status -->
               {% if entry.biorhythms %}
               <div class="metric-card biorhythm-card">
@@ -203,21 +213,27 @@
                   <div class="biorhythm-item">
                     <span class="biorhythm-emoji">💪</span>
                     <span class="biorhythm-name">Physical</span>
-                    <span class="biorhythm-status {{ entry.biorhythms.physical.status }}">
+                    <span
+                      class="biorhythm-status {{ entry.biorhythms.physical.status }}"
+                    >
                       {{ entry.biorhythms.physical.percentage }}%
                     </span>
                   </div>
                   <div class="biorhythm-item">
                     <span class="biorhythm-emoji">😊</span>
                     <span class="biorhythm-name">Emotional</span>
-                    <span class="biorhythm-status {{ entry.biorhythms.emotional.status }}">
+                    <span
+                      class="biorhythm-status {{ entry.biorhythms.emotional.status }}"
+                    >
                       {{ entry.biorhythms.emotional.percentage }}%
                     </span>
                   </div>
                   <div class="biorhythm-item">
                     <span class="biorhythm-emoji">🧠</span>
                     <span class="biorhythm-name">Intellectual</span>
-                    <span class="biorhythm-status {{ entry.biorhythms.intellectual.status }}">
+                    <span
+                      class="biorhythm-status {{ entry.biorhythms.intellectual.status }}"
+                    >
                       {{ entry.biorhythms.intellectual.percentage }}%
                     </span>
                   </div>
@@ -233,8 +249,10 @@
               <div class="correlation-card">
                 <div class="correlation-item">
                   <span
-                    >Temperature: {{ entry.weather.temp_min|round(1) }}° - {{
-                    entry.weather.temp_max|round(1) }}°C</span
+                    >Temperature: {% if entry.weather.temp_min and
+                    entry.weather.temp_max %}{{ entry.weather.temp_min|round(1)
+                    }}° - {{ entry.weather.temp_max|round(1) }}°C{% else %}No
+                    data{% endif %}</span
                   >
                   <span>Mood: {{ entry.avg_mood|round(1) }}/5</span>
                 </div>
@@ -265,7 +283,10 @@
                 </div>
                 {% endif %} {% if entry.weather.aqi %}
                 <div class="correlation-item">
-                  <span>Air Quality: AQI {{ entry.weather.aqi }} ({{ entry.weather.aqi_description }})</span>
+                  <span
+                    >Air Quality: AQI {{ entry.weather.aqi }} ({{
+                    entry.weather.aqi_description }})</span
+                  >
                   {% if entry.weather.aqi <= 2 %}
                   <span style="color: #059669">Good air quality</span>
                   {% elif entry.weather.aqi == 3 %}
@@ -274,9 +295,12 @@
                   <span style="color: #dc2626">Poor air quality</span>
                   {% endif %}
                 </div>
-                {% endif %} {% if entry.weather.daylight_hours %}
+                {% if entry.weather.daylight_hours %}
                 <div class="correlation-item">
-                  <span>Daylight: {{ entry.weather.daylight_hours|round(1) }} hours</span>
+                  <span
+                    >Daylight: {{ entry.weather.daylight_hours|round(1) }}
+                    hours</span
+                  >
                   {% if entry.weather.daylight_hours > 12 %}
                   <span style="color: #059669">Long day</span>
                   {% elif entry.weather.daylight_hours < 8 %}
@@ -408,7 +432,7 @@
                 {% endif %}
               </div>
             </div>
-            {% endif %}
+            {% endif %} {% endif %}
 
             <!-- All Entries -->
             {% if entry.entries %}
@@ -435,13 +459,11 @@
                     </div>
                   </div>
                   <div class="entry-time">
-                    {% set datetime_parts = timeline_entry['datetime'].split(' ') %}
-                    {% if datetime_parts|length > 1 %}
-                      {% set entry_time = datetime_parts[1][:5] %}
-                    {% else %}
-                      {% set entry_time = timeline_entry['datetime'][:5] %}
-                    {% endif %}
-                    {{ entry_time }}
+                    {% set dt_str = timeline_entry['datetime'] %} {% if 'T' in
+                    dt_str %} {% set time_part = dt_str.split('T')[1] %} {% elif
+                    ' ' in dt_str %} {% set time_part = dt_str.split(' ')[1] %}
+                    {% else %} {% set time_part = "" %} {% endif %} {{
+                    time_part[:5] if time_part else "--:--" }}
                   </div>
                 </div>
                 {% endfor %}
@@ -653,7 +675,7 @@
         background: linear-gradient(135deg, #fef3c7, #fbbf24);
         border: 2px solid #f59e0b;
       }
-      
+
       .biorhythm-grid {
         display: flex;
         flex-direction: column;
@@ -661,7 +683,7 @@
         margin-top: 0.5rem;
         font-size: 0.8rem;
       }
-      
+
       .biorhythm-item {
         display: flex;
         align-items: center;
@@ -670,34 +692,34 @@
         background: rgba(255, 255, 255, 0.3);
         border-radius: 4px;
       }
-      
+
       .biorhythm-emoji {
         font-size: 1rem;
       }
-      
+
       .biorhythm-name {
         flex: 1;
         margin-left: 0.5rem;
         font-weight: 500;
       }
-      
+
       .biorhythm-status {
         padding: 0.125rem 0.375rem;
         border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 600;
       }
-      
+
       .biorhythm-status.positive {
         background: #dcfce7;
         color: #166534;
       }
-      
+
       .biorhythm-status.negative {
         background: #fef2f2;
         color: #dc2626;
       }
-      
+
       .biorhythm-status.critical {
         background: #fef3c7;
         color: #92400e;

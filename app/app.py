@@ -497,10 +497,13 @@ def analytics():
             moon = moon_by_date.get(date_str, {})
             biorhythms = biorhythm_by_date.get(date_str, {})
             
-            # Calculate average temperature
+            # Calculate average temperature (exclude invalid zero values)
             temp_min = weather.get('temp_min')
             temp_max = weather.get('temp_max')
-            temperature = ((temp_min + temp_max) / 2) if temp_min is not None and temp_max is not None else None
+            if temp_min is not None and temp_max is not None and temp_min > 0 and temp_max > 0:
+                temperature = (temp_min + temp_max) / 2
+            else:
+                temperature = None
             
             daily_summary = {
                 'date': date_str,

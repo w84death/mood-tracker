@@ -50,7 +50,11 @@
                 {% if day.weather %}
                 <div class="weather-info">
                   <div>
+                    {% if day.weather.temp_min and day.weather.temp_max %}
                     {{ day.weather.temp_min|round(1) }}°/{{ day.weather.temp_max|round(1) }}°C
+                    {% else %}
+                    No temp data
+                    {% endif %}
                   </div>
                   {% if day.weather.humidity %}
                   <div>

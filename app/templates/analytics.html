@@ -99,9 +99,10 @@
           </div>
 
           <!-- Energy vs Weather -->
+          <!-- Energy vs Environmental -->
           <div class="chart-container">
             <h3 class="chart-title">⚡ Energy vs Environmental</h3>
-            <canvas id="environmentalChart"></canvas>
+            <canvas id="energyEnvironmentalChart"></canvas>
           </div>
 
           <!-- Air Quality & Daylight -->
@@ -324,7 +325,7 @@
         const validMoods = moods.filter(m => m !== null);
         const validEnergies = energies.filter(e => e !== null);
 
-        const validTemps = temperatures.filter(t => t !== null);
+        const validTemps = temperatures.filter(t => t !== null && t !== undefined && t > -50 && t < 60);
         const validAQI = airQuality.filter(a => a !== null);
         const validDaylight = daylightHours.filter(d => d !== null);
 
@@ -671,59 +672,97 @@
           }
         });
 
-        // Energy vs Environmental
-        const pressureEnergyData = dailyData.filter(d => d.air_pressure && d.avg_energy);
-        const pressureRange = getDataRange(pressureEnergyData.map(d => d.air_pressure), 980, 1040);
+        // Energy vs Environmental - Combined chart with multiple environmental factors
+        const energyDataWithEnv = dailyData.filter(d => d.avg_energy && 
+          (d.air_pressure || d.temperature || d.humidity || d.daylight_hours));
         
-        new Chart(document.getElementById('energyEnvironmentalChart'), {
-          type: 'scatter',
-          data: {
-            datasets: [{
+        if (energyDataWithEnv.length > 0) {
+          // Filter datasets that have actual data
+          const datasets = [];
+          
+          // Air Pressure vs Energy
+          const pressureData = energyDataWithEnv.filter(d => d.air_pressure);
+          if (pressureData.length > 0) {
+            datasets.push({
               label: 'Air Pressure vs Energy',
-              data: pressureEnergyData.map(d => ({
+              data: pressureData.map(d => ({
                 x: d.air_pressure,
                 y: d.avg_energy
               })),
               backgroundColor: 'rgba(245, 158, 11, 0.6)',
               borderColor: '#f59e0b',
               pointRadius: 6,
-              pointHoverRadius: 8
-            }]
-          },
-          options: {
-            ...chartOptions,
-            scales: {
-              x: {
-                min: pressureRange.min,
-                max: pressureRange.max,
-                title: {
-                  display: true,
-                  text: 'Air Pressure (hPa)'
-                },
-                grid: {
-                  color: 'rgba(0, 0, 0, 0.1)'
-                }
-              },
-              y: {
-                min: 0,
-                max: 5,
-                ticks: {
-                  stepSize: 1,
-                  callback: function(value) {
-                    return value + '/5';
+              pointHoverRadius: 8,
+              xAxisID: 'x'
+            });
+          }
+          
+          // Temperature vs Energy (if different from pressure data)
+          const tempData = energyDataWithEnv.filter(d => d.temperature);
+          if (tempData.length > 0) {
+            datasets.push({
+              label: 'Temperature vs Energy',
+              data: tempData.map(d => ({
+                x: d.temperature,
+                y: d.avg_energy
+              })),
+              backgroundColor: 'rgba(239, 68, 68, 0.6)',
+              borderColor: '#ef4444',
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              xAxisID: 'x'
+            });
+          }
+          
+          const xMin = Math.min(...energyDataWithEnv.map(d => d.air_pressure || d.temperature || 0).filter(v => v > 0));
+          const xMax = Math.max(...energyDataWithEnv.map(d => d.air_pressure || d.temperature || 0));
+          
+          new Chart(document.getElementById('energyEnvironmentalChart'), {
+            type: 'scatter',
+            data: { datasets },
+            options: {
+              ...chartOptions,
+              scales: {
+                x: {
+                  min: xMin * 0.9,
+                  max: xMax * 1.1,
+                  title: {
+                    display: true,
+                    text: 'Environmental Factors'
+                  },
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
                   }
                 },
-                title: {
-                  display: true,
-                  text: 'Energy Level (1-5)'
-                },
-                grid: {
-                  color: 'rgba(0, 0, 0, 0.1)'
+                y: {
+                  min: 0,
+                  max: 5,
+                  ticks: {
+                    stepSize: 1,
+                    callback: function(value) {
+                      return value + '/5';
+                    }
+                  },
+                  title: {
+                    display: true,
+                    text: 'Energy (1-5)'
+                  },
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                  }
                 }
               }
             }
-          }
-        });
+          });
+        } else {
+          // Show message when no data available
+          const canvas = document.getElementById('energyEnvironmentalChart');
+          const ctx = canvas.getContext('2d');
+          ctx.font = '16px Inter';
+          ctx.fillStyle = '#6b7280';
+          ctx.textAlign = 'center';
+          ctx.fillText('No environmental data available', canvas.width/2, canvas.height/2);
+        }
 
         // Biorhythm Cycles Chart
         new Chart(document.getElementById('biorhythmChart'), {
