@@ -12,6 +12,18 @@ load_dotenv()
 app = Flask(__name__)
 
 @app.route('/')
+def home():
+    """Render the home/landing page."""
+    return render_template('home.html')
+
+@app.route('/auth', methods=['POST'])
+def auth():
+    """Handle fake authentication (login/register)."""
+    # In demo mode, any email/PIN combination works
+    # In production, this would validate against email-sent PINs
+    return redirect(url_for('timeline'))
+
+@app.route('/timeline')
 def timeline():
     """Render the main timeline view."""
     # Get date range (show current week by default)

@@ -128,6 +128,11 @@ nav a:hover,
   gap: 1rem;
   margin: 1rem 0;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.nav-buttons .nav-btn[style*="margin-left: auto"] {
+  margin-left: auto !important;
 }
 
 /* Timeline Styles */

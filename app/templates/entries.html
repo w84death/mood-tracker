@@ -22,6 +22,9 @@
         <p>Review your health patterns and daily wellness tracking data</p>
 
         <div class="nav-buttons">
+          <a href="{{ url_for('home') }}" class="nav-btn"
+            >🏠 Home</a
+          >
           <a href="{{ url_for('timeline') }}" class="nav-btn"
             >🌟 Timeline View</a
           >
@@ -29,7 +32,10 @@
             >📈 Analytics</a
           >
           <a href="{{ url_for('timeline') }}" class="nav-btn"
-            >➕ Add New Entry</a
+            >📝 Add Entry</a
+          >
+          <a href="{{ url_for('home') }}" class="nav-btn" style="margin-left: auto; background: #ef4444; border-color: #ef4444;"
+            >🚪 Logout</a
           >
         </div>
       </div>
