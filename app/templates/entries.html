@@ -50,15 +50,14 @@
             </div>
 
             <div class="pattern-card">
-              <span class="pattern-emoji">🌙</span>
+              <span class="pattern-emoji">🌡️</span>
               <div class="pattern-value">
-                {% set moon_days =
-                entries|selectattr('moon_phase.illumination_percent')|list %} {%
-                if moon_days %} {{
-                (moon_days|map(attribute='moon_phase.illumination_percent')|sum
-                / moon_days|length)|round(0) }}% {% else %} N/A {% endif %}
+                {% set temp_entries = entries|selectattr('weather.temp_min')|selectattr('weather.temp_max')|list %} 
+                {% if temp_entries %} 
+                {{ ((temp_entries|map(attribute='weather.temp_min')|sum + temp_entries|map(attribute='weather.temp_max')|sum) / (temp_entries|length * 2))|round(1) }}°C 
+                {% else %} N/A {% endif %}
               </div>
-              <div class="pattern-label">Avg Moon Illumination</div>
+              <div class="pattern-label">Avg Temperature</div>
             </div>
 
             <div class="pattern-card">
@@ -374,8 +373,13 @@
                     </div>
                   </div>
                   <div class="entry-time">
-                    {% set entry_time = timeline_entry['datetime'].split('
-                    ')[1][:5] %} {{ entry_time }}
+                    {% set datetime_parts = timeline_entry['datetime'].split(' ') %}
+                    {% if datetime_parts|length > 1 %}
+                      {% set entry_time = datetime_parts[1][:5] %}
+                    {% else %}
+                      {% set entry_time = timeline_entry['datetime'][:5] %}
+                    {% endif %}
+                    {{ entry_time }}
                   </div>
                 </div>
                 {% endfor %}
