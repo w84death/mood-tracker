@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoodFlow - Personal Wellness Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+        .landing-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .landing-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        .tagline {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .features {
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 16px;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .feature:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            min-width: 2rem;
+        }
+        
+        .feature-text {
+            color: #475569;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .auth-section {
+            margin-top: 2.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 2rem;
+        }
+        
+        .auth-title {
+            color: #334155;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            box-sizing: border-box;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .auth-input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .auth-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+        
+        .auth-toggle {
+            margin-top: 1rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .auth-toggle a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+        
+        .demo-note {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #92400e;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .landing-container {
+                padding: 1rem;
+            }
+            
+            .landing-card {
+                padding: 2rem;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <div class="landing-card">
+            <div class="logo">🌊 MoodFlow</div>
+            <p class="tagline">
+                Track your wellness journey with intelligent insights and beautiful visualizations
+            </p>
+            
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">📊</span>
+                    <span class="feature-text">Interactive hourly timeline with visual mood tracking</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🎯</span>
+                    <span class="feature-text">Smart analytics revealing wellness patterns</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🌤️</span>
+                    <span class="feature-text">Weather impact insights on your mood</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🔒</span>
+                    <span class="feature-text">PIN-based secure access, no passwords</span>
+                </div>
+            </div>
+            
+            <div class="auth-section">
+                <h2 class="auth-title">Get Started</h2>
+                
+                <form class="auth-form" id="authForm" action="/auth" method="post">
+                    <div class="input-group">
+                        <input 
+                            type="email" 
+                            class="auth-input" 
+                            placeholder="Enter your email address"
+                            id="emailInput"
+                            name="email"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="input-group" id="pinGroup" style="display: none;">
+                        <input 
+                            type="text" 
+                            class="auth-input" 
+                            placeholder="Enter 6-digit PIN from email"
+                            id="pinInput"
+                            name="pin"
+                            maxlength="6"
+                        />
+                    </div>
+                    
+                    <button type="submit" class="auth-btn" id="authButton">
+                        Send Login PIN
+                    </button>
+                </form>
+                
+                <div class="auth-toggle">
+                    <span id="toggleText">New to MoodFlow?</span> 
+                    <a href="#" id="toggleLink">Create account</a>
+                </div>
+                
+                <div class="demo-note">
+                    <strong>🎮 Demo Mode:</strong> Enter any email and PIN to explore MoodFlow! 
+                    In production, you'll receive a secure 6-digit PIN via email for passwordless access.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = true;
+        let emailSent = false;
+        
+        const authForm = document.getElementById('authForm');
+        const emailInput = document.getElementById('emailInput');
+        const pinInput = document.getElementById('pinInput');
+        const pinGroup = document.getElementById('pinGroup');
+        const authButton = document.getElementById('authButton');
+        const toggleText = document.getElementById('toggleText');
+        const toggleLink = document.getElementById('toggleLink');
+        
+        // Toggle between login and register
+        toggleLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            
+            if (isLogin) {
+                toggleText.textContent = 'New to MoodFlow?';
+                toggleLink.textContent = 'Create account';
+                authButton.textContent = emailSent ? 'Verify PIN' : 'Send Login PIN';
+            } else {
+                toggleText.textContent = 'Already have an account?';
+                toggleLink.textContent = 'Sign in';
+                authButton.textContent = emailSent ? 'Verify PIN' : 'Send Registration PIN';
+            }
+            
+            // Reset form state
+            if (!emailSent) {
+                pinGroup.style.display = 'none';
+                emailInput.style.display = 'block';
+            }
+        });
+        
+        // Handle form submission
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!emailSent) {
+                // First step: "send" email
+                const email = emailInput.value.trim();
+                if (!email) return;
+                
+                // Simulate sending email
+                authButton.textContent = 'Sending...';
+                authButton.disabled = true;
+                
+                setTimeout(() => {
+                    emailSent = true;
+                    emailInput.style.display = 'none';
+                    pinGroup.style.display = 'block';
+                    authButton.textContent = 'Verify PIN';
+                    authButton.disabled = false;
+                    pinInput.focus();
+                    
+                    // Add visual feedback
+                    pinGroup.style.animation = 'fadeInUp 0.5s ease-out';
+                }, 1500);
+                
+            } else {
+                // Second step: verify PIN (fake - any PIN works)
+                const pin = pinInput.value.trim();
+                if (pin.length < 4) {
+                    pinInput.style.borderColor = '#ef4444';
+                    pinInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+                    return;
+                }
+                
+                // Simulate verification
+                authButton.textContent = 'Verifying...';
+                authButton.disabled = true;
+                
+                setTimeout(() => {
+                    // Submit the form to the auth route
+                    authForm.submit();
+                }, 1000);
+            }
+        });
+        
+        // PIN input formatting
+        pinInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+            if (e.target.style.borderColor === 'rgb(239, 68, 68)') {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
+            }
+        });
+        
+        // Auto-submit when PIN is complete
+        pinInput.addEventListener('keyup', (e) => {
+            if (e.target.value.length === 6) {
+                setTimeout(() => authForm.dispatchEvent(new Event('submit')), 500);
+            }
+        });
+        
+        // Smooth focus animations
+        document.querySelectorAll('.auth-input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', () => {
+                input.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Add some interactive polish
+        document.querySelectorAll('.feature').forEach((feature, index) => {
+            feature.style.animationDelay = `${index * 0.1}s`;
+            feature.style.animation = 'fadeInUp 0.6s ease-out forwards';
+            feature.style.opacity = '0';
+        });
+    </script>
+</body>
+</html>

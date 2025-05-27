@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoodFlow - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>⚙️ Settings & Personalization</h1>
+        <p>Customize your MoodFlow experience and manage your preferences</p>
+
+        {% set current_page = 'settings' %}
+        {% include 'nav_buttons.html' %}
+      </div>
+
+      <div class="main-content">
+        <div class="settings-container">
+          <div class="settings-section">
+            <h2>🎨 Appearance</h2>
+            <div class="setting-item">
+              <label>Theme Preference</label>
+              <select class="form-control" disabled>
+                <option>Auto (System)</option>
+                <option>Light</option>
+                <option>Dark</option>
+              </select>
+              <small>Coming soon - automatic theme switching</small>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>📊 Tracking Preferences</h2>
+            <div class="setting-item">
+              <label>Default Mood Scale</label>
+              <select class="form-control" disabled>
+                <option>1-5 Scale</option>
+                <option>1-10 Scale</option>
+                <option>Emoji Only</option>
+              </select>
+              <small>Customize how you rate your mood</small>
+            </div>
+            <div class="setting-item">
+              <label>Reminder Notifications</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" disabled> Daily entry reminders
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" disabled> Weekly summary reports
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" disabled> Mood pattern insights
+                </label>
+              </div>
+              <small>Get notified to maintain your tracking habit</small>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>🌤️ Data & Privacy</h2>
+            <div class="setting-item">
+              <label>Weather Data</label>
+              <select class="form-control" disabled>
+                <option>Auto-detect location</option>
+                <option>Manual location</option>
+                <option>Disabled</option>
+              </select>
+              <small>Choose how weather data is collected</small>
+            </div>
+            <div class="setting-item">
+              <label>Data Export</label>
+              <button class="btn btn-secondary" disabled>Download My Data</button>
+              <small>Export your mood tracking data in CSV format</small>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>🔐 Account</h2>
+            <div class="setting-item">
+              <label>Email Address</label>
+              <input type="email" class="form-control" value="demo@example.com" disabled>
+              <small>Used for PIN authentication and notifications</small>
+            </div>
+            <div class="setting-item">
+              <label>PIN Authentication</label>
+              <button class="btn btn-secondary" disabled>Change PIN Method</button>
+              <small>Modify how you receive authentication PINs</small>
+            </div>
+          </div>
+
+          <div class="coming-soon-notice">
+            <h3>🚀 Coming Soon</h3>
+            <p>These personalization features are currently in development. Stay tuned for updates!</p>
+            <ul>
+              <li>Custom mood tracking categories</li>
+              <li>Personalized analytics dashboards</li>
+              <li>Goal setting and progress tracking</li>
+              <li>Advanced notification preferences</li>
+              <li>Data synchronization across devices</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .settings-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 0;
+      }
+
+      .settings-section {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+      }
+
+      .settings-section h2 {
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .setting-item {
+        margin-bottom: 1.5rem;
+      }
+
+      .setting-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .setting-item label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+      }
+
+      .checkbox-group {
+        margin: 0.5rem 0;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-weight: normal;
+        cursor: not-allowed;
+      }
+
+      .checkbox-label input {
+        margin-right: 0.5rem;
+      }
+
+      .setting-item small {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+      }
+
+      .form-control:disabled,
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .coming-soon-notice {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 2px solid #f59e0b;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+        text-align: center;
+      }
+
+      .coming-soon-notice h3 {
+        color: #92400e;
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+      }
+
+      .coming-soon-notice p {
+        color: #78350f;
+        margin-bottom: 1rem;
+      }
+
+      .coming-soon-notice ul {
+        text-align: left;
+        color: #78350f;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      .coming-soon-notice li {
+        margin-bottom: 0.5rem;
+      }
+
+      @media (max-width: 768px) {
+        .settings-container {
+          padding: 1rem;
+        }
+
+        .settings-section {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </body>
+</html>

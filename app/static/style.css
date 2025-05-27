@@ -126,13 +126,33 @@ nav a:hover,
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin: 1rem 0;
+  margin: 1rem;
   flex-wrap: wrap;
   align-items: center;
 }
 
 .nav-buttons .nav-btn[style*="margin-left: auto"] {
   margin-left: auto !important;
+}
+
+/* Active navigation state */
+.nav-btn.active {
+  background: var(--primary-color, #667eea) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Logout button specific styling */
+.nav-btn.logout-btn {
+  margin-left: auto;
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.nav-btn.logout-btn:hover {
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 /* Timeline Styles */

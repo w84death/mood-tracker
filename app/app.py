@@ -23,6 +23,11 @@ def auth():
     # In production, this would validate against email-sent PINs
     return redirect(url_for('timeline'))
 
+@app.route('/settings')
+def settings():
+    """Placeholder settings page for future personalization features."""
+    return render_template('settings.html')
+
 @app.route('/timeline')
 def timeline():
     """Render the main timeline view."""

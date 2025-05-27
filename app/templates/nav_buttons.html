@@ -1,0 +1,22 @@
+<!-- Navigation buttons template - can be included in any authenticated page -->
+<div class="nav-buttons">
+  <a href="{{ url_for('timeline') }}" class="nav-btn{% if current_page == 'timeline' %} active{% endif %}">
+    🌟 Timeline
+  </a>
+  <a href="{{ url_for('view_entries') }}" class="nav-btn{% if current_page == 'entries' %} active{% endif %}">
+    📊 View Summary
+  </a>
+  <a href="{{ url_for('analytics') }}" class="nav-btn{% if current_page == 'analytics' %} active{% endif %}">
+    📈 Analytics
+  </a>
+  {% if show_go_to_today %}
+  <button class="nav-btn" onclick="goToToday()">🎯 Go to Today</button>
+  {% endif %}
+  <a href="{{ url_for('settings') }}" class="nav-btn{% if current_page == 'settings' %} active{% endif %}">
+    ⚙️ Settings
+  </a>
+  <a href="{{ url_for('home') }}" class="nav-btn logout-btn">
+    🚪 Logout
+  </a>
+</div>
+

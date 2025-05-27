@@ -21,23 +21,8 @@
         <h1>📊 Daily Health Summaries</h1>
         <p>Review your health patterns and daily wellness tracking data</p>
 
-        <div class="nav-buttons">
-          <a href="{{ url_for('home') }}" class="nav-btn"
-            >🏠 Home</a
-          >
-          <a href="{{ url_for('timeline') }}" class="nav-btn"
-            >🌟 Timeline View</a
-          >
-          <a href="{{ url_for('analytics') }}" class="nav-btn"
-            >📈 Analytics</a
-          >
-          <a href="{{ url_for('timeline') }}" class="nav-btn"
-            >📝 Add Entry</a
-          >
-          <a href="{{ url_for('home') }}" class="nav-btn" style="margin-left: auto; background: #ef4444; border-color: #ef4444;"
-            >🚪 Logout</a
-          >
-        </div>
+        {% set current_page = 'entries' %}
+        {% include 'nav_buttons.html' %}
       </div>
 
       <div class="entries-container">

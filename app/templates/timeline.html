@@ -24,21 +24,9 @@
           Build your health story one moment at a time.
         </p>
 
-        <div class="nav-buttons">
-          <a href="{{ url_for('home') }}" class="nav-btn"
-            >🏠 Home</a
-          >
-          <a href="{{ url_for('view_entries') }}" class="nav-btn"
-            >📊 View Summary</a
-          >
-          <a href="{{ url_for('analytics') }}" class="nav-btn"
-            >📈 Analytics</a
-          >
-          <button class="nav-btn" onclick="goToToday()">🎯 Go to Today</button>
-          <a href="{{ url_for('home') }}" class="nav-btn" style="margin-left: auto; background: #ef4444; border-color: #ef4444;"
-            >🚪 Logout</a
-          >
-        </div>
+        {% set show_go_to_today = true %}
+        {% set current_page = 'timeline' %}
+        {% include 'nav_buttons.html' %}
       </div>
 
       <div class="timeline-container">
