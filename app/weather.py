@@ -207,13 +207,15 @@ def get_weather_for_date(date_str):
         target_date = date_obj.date()
         days_diff = (target_date - today).days
 
+        print(f"[Weather] Getting weather data for {date_str} (days diff: {days_diff})")
+        
         weather_data = None
         if days_diff > 0:
             # Future date - get forecast (only available for next 5 days)
             if days_diff <= 5:
                 weather_data = get_forecast_weather(date_str)
             else:
-                print(f"Forecast not available for {date_str} (too far in future)")
+                print(f"[Weather] Forecast not available for {date_str} (too far in future)")
                 return None
         elif days_diff == 0:
             # Today - get current weather
@@ -224,14 +226,28 @@ def get_weather_for_date(date_str):
 
         # Add air pollution data if weather data was successfully retrieved
         if weather_data:
+            print(f"[Weather] Successfully retrieved weather data for {date_str}, now fetching air pollution")
             air_pollution = get_air_pollution_for_date(date_str)
             if air_pollution:
+                print(f"[Weather] Successfully retrieved air pollution data for {date_str}")
                 weather_data.update(air_pollution)
+            else:
+                print(f"[Weather] Failed to get air pollution data for {date_str}")
+                # Make sure the AQI fields exist but are explicitly None rather than missing
+                weather_data.update({
+                    'aqi': None,
+                    'aqi_description': 'Data Unavailable',
+                    'pm2_5': None,
+                    'pm10': None,
+                    'no2': None,
+                    'o3': None,
+                    'co': None
+                })
 
         return weather_data
 
     except ValueError as e:
-        print(f"Invalid date format: {date_str}")
+        print(f"[Weather] Invalid date format: {date_str}")
         return None
 
 def format_weather_summary(weather_data):
@@ -393,7 +409,7 @@ def is_historical_date(date_str):
 def get_air_pollution_for_date(date_str):
     """Get air pollution data for a specific date."""
     if not API_KEY:
-        print("Warning: OPENWEATHER_API_KEY not set")
+        print("ERROR: OPENWEATHER_API_KEY not set - Air Quality data unavailable")
         return None
 
     try:
@@ -402,56 +418,82 @@ def get_air_pollution_for_date(date_str):
         target_date = date_obj.date()
         days_diff = (target_date - today).days
 
+        print(f"[AQI] Fetching air pollution data for {date_str} (days diff: {days_diff})")
+        
         if days_diff == 0:
             # Current air pollution
+            endpoint_type = "current"
             url = f'http://api.openweathermap.org/data/2.5/air_pollution?lat={LAT}&lon={LON}&appid={API_KEY}'
         elif days_diff > 0 and days_diff <= 5:
             # Forecast air pollution (available for next 5 days)
+            endpoint_type = "forecast"
             url = f'http://api.openweathermap.org/data/2.5/air_pollution/forecast?lat={LAT}&lon={LON}&appid={API_KEY}'
         else:
             # Historical air pollution (requires paid plan for dates > 5 days ago)
             # Use current date timestamp at noon for historical data
+            endpoint_type = "historical"
             timestamp = int(date_obj.replace(hour=12).timestamp())
             url = f'http://api.openweathermap.org/data/2.5/air_pollution/history?lat={LAT}&lon={LON}&start={timestamp}&end={timestamp}&appid={API_KEY}'
-
+        
+        print(f"[AQI] Using {endpoint_type} endpoint for {date_str}")
+        
+        # Remove API key from URL for logging purposes
+        log_url = url.split('appid=')[0] + 'appid=***'
+        print(f"[AQI] Requesting URL: {log_url}")
+        
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-
-        if 'list' in data and len(data['list']) > 0:
-            pollution_data = data['list'][0]  # Get first entry
+        
+        print(f"[AQI] Response status code: {response.status_code}")
+        
+        if 'list' in data:
+            print(f"[AQI] Found {len(data['list'])} pollution entries in response")
             
-            # For forecast data, find the entry closest to the target date
-            if days_diff > 0 and days_diff <= 5:
-                target_timestamp = date_obj.replace(hour=12).timestamp()
-                closest_entry = min(data['list'], 
-                                   key=lambda x: abs(x['dt'] - target_timestamp))
-                pollution_data = closest_entry
+            if len(data['list']) > 0:
+                pollution_data = data['list'][0]  # Get first entry
+                
+                # For forecast data, find the entry closest to the target date
+                if days_diff > 0 and days_diff <= 5:
+                    target_timestamp = date_obj.replace(hour=12).timestamp()
+                    closest_entry = min(data['list'], 
+                                       key=lambda x: abs(x['dt'] - target_timestamp))
+                    pollution_data = closest_entry
+                    print(f"[AQI] Selected forecast entry with timestamp: {datetime.fromtimestamp(closest_entry['dt'])}")
 
-            aqi = pollution_data.get('main', {}).get('aqi', 0)
-            components = pollution_data.get('components', {})
-            
-            return {
-                'aqi': aqi,
-                'aqi_description': get_aqi_description(aqi),
-                'pm2_5': components.get('pm2_5', 0),
-                'pm10': components.get('pm10', 0),
-                'no2': components.get('no2', 0),
-                'o3': components.get('o3', 0),
-                'co': components.get('co', 0)
-            }
+                aqi = pollution_data.get('main', {}).get('aqi', 0)
+                components = pollution_data.get('components', {})
+                
+                print(f"[AQI] Successfully parsed AQI: {aqi}, Components: {', '.join([f'{k}={v}' for k, v in components.items()])}")
+                
+                return {
+                    'aqi': aqi,
+                    'aqi_description': get_aqi_description(aqi),
+                    'pm2_5': components.get('pm2_5', 0),
+                    'pm10': components.get('pm10', 0),
+                    'no2': components.get('no2', 0),
+                    'o3': components.get('o3', 0),
+                    'co': components.get('co', 0)
+                }
+            else:
+                print(f"[AQI] ERROR: Empty pollution data list for {date_str}")
+                return None
         else:
-            print(f"No air pollution data available for {date_str}")
+            print(f"[AQI] ERROR: No 'list' field in API response for {date_str}")
+            print(f"[AQI] Response content: {data}")
             return None
 
     except requests.RequestException as e:
         if "401" in str(e):
-            print(f"Air pollution data may require OpenWeather subscription for {date_str}")
+            print(f"[AQI] ERROR: Authentication failed (401) - Air pollution API likely requires paid subscription for {date_str}")
         else:
-            print(f"Error fetching air pollution data for {date_str}: {e}")
+            print(f"[AQI] ERROR: Request failed for {date_str}: {e}")
+            print(f"[AQI] Consider checking if your API key has access to the Air Pollution API")
         return None
     except (KeyError, ValueError, IndexError) as e:
-        print(f"Error parsing air pollution data for {date_str}: {e}")
+        print(f"[AQI] ERROR: Failed to parse air pollution data for {date_str}: {e}")
+        import traceback
+        print(f"[AQI] Traceback: {traceback.format_exc()}")
         return None
 
 def get_aqi_description(aqi):
