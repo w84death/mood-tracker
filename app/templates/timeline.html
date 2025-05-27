@@ -28,10 +28,10 @@
           <a href="{{ url_for('view_entries') }}" class="nav-btn"
             >📊 View Summary</a
           >
+          <a href="{{ url_for('analytics') }}" class="nav-btn"
+            >📈 Analytics</a
+          >
           <button class="nav-btn" onclick="goToToday()">🎯 Go to Today</button>
-          <button class="nav-btn" onclick="loadMoreDays()">
-            📅 Load More Days
-          </button>
         </div>
       </div>
 
@@ -659,10 +659,7 @@
         }
       }
 
-      function loadMoreDays() {
-        // This would implement loading more days in a real application
-        alert("Load more days functionality would be implemented here");
-      }
+
 
       // Close modal when clicking outside
       window.onclick = function (event) {

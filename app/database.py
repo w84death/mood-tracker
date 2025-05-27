@@ -433,3 +433,15 @@ def get_moon_phase_data(date_str):
     if moon_phase:
         return dict(moon_phase)
     return None
+
+def get_moon_phase_data_range(start_date, end_date):
+    """Get moon phase data for a date range."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM moon_phases WHERE date BETWEEN ? AND ? ORDER BY date', 
+                   (start_date, end_date))
+    moon_phases = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in moon_phases]

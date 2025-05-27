@@ -422,6 +422,75 @@ def get_weather_api(date_str):
             'error': str(e)
         }), 400
 
+@app.route('/analytics')
+def analytics():
+    """Render the analytics page with correlation data."""
+    try:
+        # Get data for the last 30 days
+        end_date = date.today()
+        start_date = end_date - timedelta(days=30)
+        
+        # Get all entries for analytics
+        entries_raw = database.get_timeline_data(start_date.isoformat(), end_date.isoformat())
+        entries = [dict(e) for e in entries_raw]
+        
+        # Get weather data
+        weather_data_raw = database.get_weather_data_range(start_date.isoformat(), end_date.isoformat())
+        weather_data = [dict(w) for w in weather_data_raw]
+        weather_by_date = {w['date']: w for w in weather_data}
+        
+        # Get moon phase data
+        moon_data_raw = database.get_moon_phase_data_range(start_date.isoformat(), end_date.isoformat())
+        moon_data = [dict(m) for m in moon_data_raw]
+        moon_by_date = {m['date']: m for m in moon_data}
+        
+        # Process daily summaries for analytics
+        daily_data = []
+        current_date = start_date
+        
+        while current_date <= end_date:
+            date_str = current_date.isoformat()
+            
+            # Get entries for this date - extract date from datetime
+            day_entries = [e for e in entries if e.get('datetime', '').startswith(date_str)]
+            
+            # Calculate averages for mood, energy, stress
+            mood_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'mood' and e.get('numeric_value') is not None]
+            energy_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'energy' and e.get('numeric_value') is not None]
+            stress_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'stress' and e.get('numeric_value') is not None]
+            sleep_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'sleep_quality' and e.get('numeric_value') is not None]
+            
+            # Get weather for this date
+            weather = weather_by_date.get(date_str, {})
+            moon = moon_by_date.get(date_str, {})
+            
+            # Calculate average temperature
+            temp_min = weather.get('temp_min')
+            temp_max = weather.get('temp_max')
+            temperature = ((temp_min + temp_max) / 2) if temp_min is not None and temp_max is not None else None
+            
+            daily_summary = {
+                'date': date_str,
+                'avg_mood': sum(mood_values) / len(mood_values) if mood_values else None,
+                'avg_energy': sum(energy_values) / len(energy_values) if energy_values else None,
+                'avg_stress': sum(stress_values) / len(stress_values) if stress_values else None,
+                'sleep_quality': sleep_values[0] if sleep_values else None,
+                'temperature': temperature,
+                'humidity': weather.get('humidity'),
+                'air_pressure': weather.get('air_pressure'),
+                'moon_illumination': moon.get('illumination_percent'),
+                'weather_main': weather.get('weather_main'),
+                'precipitation': weather.get('precipitation', 0)
+            }
+            
+            daily_data.append(daily_summary)
+            current_date += timedelta(days=1)
+        
+        return render_template('analytics.html', daily_data=daily_data)
+        
+    except Exception as e:
+        return render_template('analytics.html', daily_data=[], error=str(e))
+
 if __name__ == '__main__':
     database.init_db()  # Initialize the database on startup
     database.update_entry_types_for_integers()  # Update existing entry types
