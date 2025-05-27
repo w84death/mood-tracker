@@ -14,17 +14,13 @@ A modern, intuitive health and mood tracking application with a beautiful landin
 ### Running
 ```sudo docker run -p 8080:8080 mood-tracker```
 
+### Backup
+```sudo ./backup_db.sh```
+
 ### Open in Browser
 Navigate to [http://localhost:8080](http://localhost:8080)
 
 ## 📋 Usage Guide
-
-### Adding Entries
-1. **Click any time slot** on the timeline
-2. **Select entry type** from the dropdown (mood, energy, meal, etc.)
-3. **Enter value or description** based on the entry type
-4. **Add optional notes** for additional context
-5. **Save the entry** - it appears instantly on the timeline
 
 ### Entry Types
 - **Mood** 😊: Rate 1-5 (1=poor, 5=excellent)
