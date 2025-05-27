@@ -24,10 +24,28 @@ def auth():
     # In production, this would validate against email-sent PINs
     return redirect(url_for('timeline'))
 
-@app.route('/settings')
+@app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    """Placeholder settings page for future personalization features."""
-    return render_template('settings.html')
+    """Settings page for location and birth date configuration."""
+    if request.method == 'POST':
+        # Handle form submission
+        location_mode = request.form.get('location_mode', 'auto')
+        latitude = request.form.get('latitude', '52.4064')
+        longitude = request.form.get('longitude', '16.9252')
+        birth_date = request.form.get('birth_date', '1995-04-17')
+        
+        # Save settings to database
+        database.set_setting('location_mode', location_mode)
+        database.set_setting('latitude', latitude)
+        database.set_setting('longitude', longitude)
+        database.set_setting('birth_date', birth_date)
+        
+        return redirect(url_for('settings'))
+    
+    # GET request - show current settings
+    settings_data = database.get_all_settings()
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    return render_template('settings.html', settings=settings_data, current_date=current_date)
 
 @app.route('/timeline')
 def timeline():

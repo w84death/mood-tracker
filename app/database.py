@@ -84,6 +84,29 @@ def init_db():
         )
     ''')
 
+    # Table for user settings
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # Initialize default settings from .env if they don't exist
+    default_settings = {
+        'location_mode': 'auto',  # 'auto' or 'manual'
+        'latitude': os.getenv('LATITUDE', '52.4064'),
+        'longitude': os.getenv('LONGITUDE', '16.9252'),
+        'birth_date': os.getenv('BIRTH_DATE', '1995-04-17')
+    }
+    
+    for key, value in default_settings.items():
+        cursor.execute('''
+            INSERT OR IGNORE INTO settings (key, value)
+            VALUES (?, ?)
+        ''', (key, value))
+
     # Insert default entry types
     default_entry_types = [
         ('mood', 'Mood', '😊', 'mood_select', 1, 5, '3', 'How are you feeling overall?'),
@@ -432,3 +455,54 @@ def get_moon_phase_data_range(start_date, end_date):
     conn.close()
     
     return [dict(row) for row in moon_phases]
+
+# Settings functions
+def get_setting(key, default=None):
+    """Get a setting value by key."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT value FROM settings WHERE key = ?', (key,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result:
+        return result['value']
+    return default
+
+def set_setting(key, value):
+    """Set a setting value."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT OR REPLACE INTO settings (key, value, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+    ''', (key, value))
+    
+    conn.commit()
+    conn.close()
+
+def get_all_settings():
+    """Get all settings as a dictionary."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT key, value FROM settings')
+    results = cursor.fetchall()
+    conn.close()
+    
+    return {row['key']: row['value'] for row in results}
+
+def get_location_settings():
+    """Get location-related settings."""
+    settings = get_all_settings()
+    return {
+        'location_mode': settings.get('location_mode', 'auto'),
+        'latitude': float(settings.get('latitude', '52.4064')),
+        'longitude': float(settings.get('longitude', '16.9252'))
+    }
+
+def get_birth_date_setting():
+    """Get birth date setting."""
+    return get_setting('birth_date', '1995-04-17')

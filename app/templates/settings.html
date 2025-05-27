@@ -18,8 +18,8 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>⚙️ Settings & Personalization</h1>
-        <p>Customize your MoodFlow experience and manage your preferences</p>
+        <h1>⚙️ Settings</h1>
+        <p>Configure your location and personal information</p>
 
         {% set current_page = 'settings' %}
         {% include 'nav_buttons.html' %}
@@ -27,88 +27,109 @@
 
       <div class="main-content">
         <div class="settings-container">
-          <div class="settings-section">
-            <h2>🎨 Appearance</h2>
-            <div class="setting-item">
-              <label>Theme Preference</label>
-              <select class="form-control" disabled>
-                <option>Auto (System)</option>
-                <option>Light</option>
-                <option>Dark</option>
-              </select>
-              <small>Coming soon - automatic theme switching</small>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h2>📊 Tracking Preferences</h2>
-            <div class="setting-item">
-              <label>Default Mood Scale</label>
-              <select class="form-control" disabled>
-                <option>1-5 Scale</option>
-                <option>1-10 Scale</option>
-                <option>Emoji Only</option>
-              </select>
-              <small>Customize how you rate your mood</small>
-            </div>
-            <div class="setting-item">
-              <label>Reminder Notifications</label>
-              <div class="checkbox-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" disabled> Daily entry reminders
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" disabled> Weekly summary reports
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" disabled> Mood pattern insights
-                </label>
+          <form method="POST" class="settings-form">
+            
+            <!-- Location Settings -->
+            <div class="settings-section">
+              <h2>📍 Location Settings</h2>
+              <p class="section-description">Configure your location for weather data and environmental tracking</p>
+              
+              <div class="setting-item">
+                <label>Location Mode</label>
+                <select name="location_mode" class="form-control" onchange="toggleLocationInputs(this.value)">
+                  <option value="auto" {{ 'selected' if settings.get('location_mode') == 'auto' else '' }}>
+                    Auto-detect location
+                  </option>
+                  <option value="manual" {{ 'selected' if settings.get('location_mode') == 'manual' else '' }}>
+                    Manual coordinates
+                  </option>
+                </select>
+                <small>Choose how your location is determined for weather data</small>
               </div>
-              <small>Get notified to maintain your tracking habit</small>
-            </div>
-          </div>
 
-          <div class="settings-section">
-            <h2>🌤️ Data & Privacy</h2>
-            <div class="setting-item">
-              <label>Weather Data</label>
-              <select class="form-control" disabled>
-                <option>Auto-detect location</option>
-                <option>Manual location</option>
-                <option>Disabled</option>
-              </select>
-              <small>Choose how weather data is collected</small>
-            </div>
-            <div class="setting-item">
-              <label>Data Export</label>
-              <button class="btn btn-secondary" disabled>Download My Data</button>
-              <small>Export your mood tracking data in CSV format</small>
-            </div>
-          </div>
+              <div id="manual-location" class="manual-location-section" style="display: {{ 'block' if settings.get('location_mode') == 'manual' else 'none' }};">
+                <div class="coordinate-group">
+                  <div class="setting-item">
+                    <label>Latitude</label>
+                    <input 
+                      type="number" 
+                      name="latitude" 
+                      step="0.0001" 
+                      min="-90" 
+                      max="90" 
+                      value="{{ settings.get('latitude', '52.4064') }}" 
+                      class="form-control"
+                      placeholder="52.4064"
+                    >
+                    <small>Latitude coordinate (-90 to 90)</small>
+                  </div>
+                  
+                  <div class="setting-item">
+                    <label>Longitude</label>
+                    <input 
+                      type="number" 
+                      name="longitude" 
+                      step="0.0001" 
+                      min="-180" 
+                      max="180" 
+                      value="{{ settings.get('longitude', '16.9252') }}" 
+                      class="form-control"
+                      placeholder="16.9252"
+                    >
+                    <small>Longitude coordinate (-180 to 180)</small>
+                  </div>
+                </div>
+              </div>
 
-          <div class="settings-section">
-            <h2>🔐 Account</h2>
-            <div class="setting-item">
-              <label>Email Address</label>
-              <input type="email" class="form-control" value="demo@example.com" disabled>
-              <small>Used for PIN authentication and notifications</small>
+              <div class="current-location-info">
+                <h4>Current Configuration:</h4>
+                <p><strong>Mode:</strong> <span id="current-mode">{{ settings.get('location_mode', 'auto').title() }}</span></p>
+                <p><strong>Coordinates:</strong> {{ settings.get('latitude', '52.4064') }}, {{ settings.get('longitude', '16.9252') }}</p>
+                <small>This location is used for weather data and astronomical calculations</small>
+              </div>
             </div>
-            <div class="setting-item">
-              <label>PIN Authentication</label>
-              <button class="btn btn-secondary" disabled>Change PIN Method</button>
-              <small>Modify how you receive authentication PINs</small>
-            </div>
-          </div>
 
-          <div class="coming-soon-notice">
-            <h3>🚀 Coming Soon</h3>
-            <p>These personalization features are currently in development. Stay tuned for updates!</p>
+            <!-- Birth Date Settings -->
+            <div class="settings-section">
+              <h2>🎂 Personal Information</h2>
+              <p class="section-description">Your birth date is used for biorhythm calculations and personalized insights</p>
+              
+              <div class="setting-item">
+                <label>Birth Date</label>
+                <input 
+                  type="date" 
+                  name="birth_date" 
+                  value="{{ settings.get('birth_date', '1995-04-17') }}" 
+                  class="form-control"
+                  max="{{ current_date }}"
+                >
+                <small>Used for biorhythm calculations and age-related insights</small>
+              </div>
+
+              <div class="birth-date-info">
+                <h4>Biorhythm Information:</h4>
+                <p>Based on your birth date, we calculate your physical, emotional, and intellectual biorhythms which may correlate with your mood patterns.</p>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-primary">
+                💾 Save Settings
+              </button>
+              <a href="{{ url_for('timeline') }}" class="btn btn-secondary">
+                Cancel
+              </a>
+            </div>
+          </form>
+
+          <!-- Information Notice -->
+          <div class="settings-info">
+            <h3>ℹ️ About These Settings</h3>
             <ul>
-              <li>Custom mood tracking categories</li>
-              <li>Personalized analytics dashboards</li>
-              <li>Goal setting and progress tracking</li>
-              <li>Advanced notification preferences</li>
-              <li>Data synchronization across devices</li>
+              <li><strong>Location:</strong> Used to fetch accurate weather data for your area. Auto-detection uses your browser's location (when permitted).</li>
+              <li><strong>Birth Date:</strong> Required for biorhythm calculations that help identify patterns in your mood cycles.</li>
+              <li><strong>Privacy:</strong> All data is stored locally and never shared with external services.</li>
             </ul>
           </div>
         </div>
@@ -122,21 +143,35 @@
         padding: 2rem 0;
       }
 
-      .settings-section {
+      .settings-form {
         background: var(--bg-primary);
         border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 2rem;
+        padding: 0;
         border: 1px solid var(--border-color);
+        overflow: hidden;
+      }
+
+      .settings-section {
+        padding: 2rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .settings-section:last-child {
+        border-bottom: none;
       }
 
       .settings-section h2 {
         color: var(--text-primary);
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
         font-size: 1.25rem;
         font-weight: 600;
-        border-bottom: 2px solid var(--border-color);
-        padding-bottom: 0.5rem;
+      }
+
+      .section-description {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
       }
 
       .setting-item {
@@ -154,22 +189,6 @@
         color: var(--text-primary);
       }
 
-      .checkbox-group {
-        margin: 0.5rem 0;
-      }
-
-      .checkbox-label {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.5rem;
-        font-weight: normal;
-        cursor: not-allowed;
-      }
-
-      .checkbox-label input {
-        margin-right: 0.5rem;
-      }
-
       .setting-item small {
         color: var(--text-secondary);
         font-size: 0.875rem;
@@ -177,41 +196,107 @@
         display: block;
       }
 
-      .form-control:disabled,
-      .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
+      .manual-location-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
       }
 
-      .coming-soon-notice {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        border: 2px solid #f59e0b;
+      .coordinate-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .current-location-info,
+      .birth-date-info {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border-left: 4px solid var(--accent-color);
+      }
+
+      .current-location-info h4,
+      .birth-date-info h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+      }
+
+      .current-location-info p,
+      .birth-date-info p {
+        margin: 0.25rem 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .settings-actions {
+        padding: 2rem;
+        background: var(--bg-secondary);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .settings-info {
+        background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+        border: 1px solid #2196f3;
         border-radius: 12px;
         padding: 2rem;
         margin-top: 2rem;
-        text-align: center;
       }
 
-      .coming-soon-notice h3 {
-        color: #92400e;
+      .settings-info h3 {
+        color: #1565c0;
         margin-bottom: 1rem;
-        font-size: 1.25rem;
+        font-size: 1.1rem;
       }
 
-      .coming-soon-notice p {
-        color: #78350f;
-        margin-bottom: 1rem;
+      .settings-info ul {
+        color: #424242;
+        margin: 0;
+        padding-left: 1.25rem;
       }
 
-      .coming-soon-notice ul {
-        text-align: left;
-        color: #78350f;
-        max-width: 500px;
-        margin: 0 auto;
+      .settings-info li {
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
       }
 
-      .coming-soon-notice li {
-        margin-bottom: 0.5rem;
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--accent-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: var(--border-color);
       }
 
       @media (max-width: 768px) {
@@ -222,7 +307,42 @@
         .settings-section {
           padding: 1.5rem;
         }
+
+        .coordinate-group {
+          grid-template-columns: 1fr;
+        }
+
+        .settings-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .btn {
+          text-align: center;
+          justify-content: center;
+        }
       }
     </style>
+
+    <script>
+      function toggleLocationInputs(mode) {
+        const manualSection = document.getElementById('manual-location');
+        const currentMode = document.getElementById('current-mode');
+        
+        if (mode === 'manual') {
+          manualSection.style.display = 'block';
+        } else {
+          manualSection.style.display = 'none';
+        }
+        
+        currentMode.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      }
+
+      // Set current date as max for birth date input
+      document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('input[name="birth_date"]').setAttribute('max', today);
+      });
+    </script>
   </body>
 </html>
