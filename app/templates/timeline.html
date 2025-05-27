@@ -244,20 +244,7 @@
             >
           </div>
 
-          <div id="stressField" class="form-group" style="display: none">
-            <label class="form-label">Stress Level</label>
-            <select id="stressValue" class="form-select">
-              <option value="">Select stress level...</option>
-              {% for stress in stress_options %}
-              <option value="{{ stress['value'] }}" {% if stress['value'] == 1 %}selected{% endif %}>
-                {{ stress['label'] }}
-              </option>
-              {% endfor %}
-            </select>
-            <small style="color: var(--text-secondary)"
-              >How stressed do you feel?</small
-            >
-          </div>
+
 
           <div id="caffeineField" class="form-group" style="display: none">
             <label class="form-label">Caffeine Intake</label>
@@ -460,7 +447,6 @@
         document.getElementById("moodField").style.display = "none";
         document.getElementById("energyField").style.display = "none";
         document.getElementById("sleepField").style.display = "none";
-        document.getElementById("stressField").style.display = "none";
         document.getElementById("caffeineField").style.display = "none";
         document.getElementById("waterField").style.display = "none";
         document.getElementById("alcoholField").style.display = "none";
@@ -480,11 +466,6 @@
           document.getElementById("sleepField").style.display = "block";
           if (defaultValue) {
             document.getElementById("sleepValue").value = defaultValue;
-          }
-        } else if (valueType === "stress_select") {
-          document.getElementById("stressField").style.display = "block";
-          if (defaultValue) {
-            document.getElementById("stressValue").value = defaultValue;
           }
         } else if (valueType === "caffeine_select") {
           document.getElementById("caffeineField").style.display = "block";
@@ -567,11 +548,6 @@
             const sleepValue = document.getElementById("sleepValue").value;
             if (sleepValue) {
               data.numeric_value = parseInt(sleepValue);
-            }
-          } else if (valueType === "stress_select") {
-            const stressValue = document.getElementById("stressValue").value;
-            if (stressValue) {
-              data.numeric_value = parseInt(stressValue);
             }
           } else if (valueType === "caffeine_select") {
             const caffeineValue = document.getElementById("caffeineValue").value;

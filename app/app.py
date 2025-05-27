@@ -25,7 +25,6 @@ def timeline():
     mood_options = database.get_mood_options()
     energy_options = database.get_energy_options()
     sleep_options = database.get_sleep_options()
-    stress_options = database.get_stress_options()
     caffeine_options = database.get_caffeine_options()
     water_options = database.get_water_options()
     alcohol_options = database.get_alcohol_options()
@@ -115,7 +114,6 @@ def timeline():
                          mood_options=mood_options,
                          energy_options=energy_options,
                          sleep_options=sleep_options,
-                         stress_options=stress_options,
                          caffeine_options=caffeine_options,
                          water_options=water_options,
                          alcohol_options=alcohol_options)
@@ -250,7 +248,6 @@ def view_entries():
                 'entries': [],
                 'mood_values': [],
                 'energy_values': [],
-                'stress_values': [],
                 'sleep_quality': None,
                 'notes': [],
                 'weather': weather_by_date.get(date_key, {}),
@@ -264,8 +261,6 @@ def view_entries():
             daily_summaries[date_key]['mood_values'].append(entry['numeric_value'])
         elif entry['entry_type'] == 'energy' and entry['numeric_value']:
             daily_summaries[date_key]['energy_values'].append(entry['numeric_value'])
-        elif entry['entry_type'] == 'stress' and entry['numeric_value']:
-            daily_summaries[date_key]['stress_values'].append(entry['numeric_value'])
         elif entry['entry_type'] == 'sleep_quality' and entry['numeric_value']:
             daily_summaries[date_key]['sleep_quality'] = entry['numeric_value']
         elif entry['notes']:
@@ -273,10 +268,9 @@ def view_entries():
     
     # Calculate averages and add weather summaries
     for date_key, summary in daily_summaries.items():
-        # Calculate average mood, energy, stress
+        # Calculate average mood, energy
         summary['avg_mood'] = sum(summary['mood_values']) / len(summary['mood_values']) if summary['mood_values'] else None
         summary['avg_energy'] = sum(summary['energy_values']) / len(summary['energy_values']) if summary['energy_values'] else None
-        summary['avg_stress'] = sum(summary['stress_values']) / len(summary['stress_values']) if summary['stress_values'] else None
         
         # Add weather summary
         summary['weather_summary'] = weather.format_weather_summary(summary['weather']) if summary['weather'] else None
@@ -306,7 +300,6 @@ def load_timeline():
         mood_options = database.get_mood_options()
         energy_options = database.get_energy_options()
         sleep_options = database.get_sleep_options()
-        stress_options = database.get_stress_options()
         caffeine_options = database.get_caffeine_options()
         water_options = database.get_water_options()
         alcohol_options = database.get_alcohol_options()
@@ -343,7 +336,6 @@ def load_timeline():
             'mood_options': mood_options,
             'energy_options': energy_options,
             'sleep_options': sleep_options,
-            'stress_options': stress_options,
             'caffeine_options': caffeine_options,
             'water_options': water_options,
             'alcohol_options': alcohol_options,
@@ -454,10 +446,9 @@ def analytics():
             # Get entries for this date - extract date from datetime
             day_entries = [e for e in entries if e.get('datetime', '').startswith(date_str)]
             
-            # Calculate averages for mood, energy, stress
+            # Calculate averages for mood, energy, sleep
             mood_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'mood' and e.get('numeric_value') is not None]
             energy_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'energy' and e.get('numeric_value') is not None]
-            stress_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'stress' and e.get('numeric_value') is not None]
             sleep_values = [e['numeric_value'] for e in day_entries if e.get('entry_type') == 'sleep_quality' and e.get('numeric_value') is not None]
             
             # Get weather for this date
@@ -473,7 +464,6 @@ def analytics():
                 'date': date_str,
                 'avg_mood': sum(mood_values) / len(mood_values) if mood_values else None,
                 'avg_energy': sum(energy_values) / len(energy_values) if energy_values else None,
-                'avg_stress': sum(stress_values) / len(stress_values) if stress_values else None,
                 'sleep_quality': sleep_values[0] if sleep_values else None,
                 'temperature': temperature,
                 'humidity': weather.get('humidity'),

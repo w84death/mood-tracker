@@ -95,7 +95,7 @@ def init_db():
         ('sleep_start', 'Bedtime', '🌙', 'boolean', None, None, 'true', 'Mark when you went to bed'),
         ('exercise', 'Exercise', '🏃', 'text', None, None, '', 'Type of exercise or activity'),
         ('water', 'Water Intake', '💧', 'water_select', 0, 20, '8', 'Glasses of water'),
-        ('stress', 'Stress Level', '😰', 'stress_select', 1, 5, '1', 'Rate your stress level'),
+
         ('notes', 'General Notes', '📝', 'text', None, None, '', 'Any observations or notes'),
         ('alcohol', 'Alcohol', '🍷', 'alcohol_select', 0, 10, '0', 'Number of alcoholic drinks'),
         ('medication', 'Medication', '💊', 'text', None, None, '', 'Medications taken'),
@@ -276,7 +276,7 @@ def get_daily_summary_with_weather(date_str):
         'mood_entries': [],
         'energy_entries': [],
         'sleep_quality': None,
-        'stress_entries': [],
+
         'notes': [],
         'activities': []
     }
@@ -296,12 +296,7 @@ def get_daily_summary_with_weather(date_str):
             })
         elif entry['entry_type'] == 'sleep_quality' and entry['numeric_value']:
             summary['sleep_quality'] = entry['numeric_value']
-        elif entry['entry_type'] == 'stress' and entry['numeric_value']:
-            summary['stress_entries'].append({
-                'time': entry['datetime'].split(' ')[1][:5],
-                'value': entry['numeric_value'],
-                'notes': entry['notes']
-            })
+
         elif entry['notes']:
             summary['notes'].append({
                 'time': entry['datetime'].split(' ')[1][:5],
@@ -337,15 +332,7 @@ def get_sleep_options():
         {'value': 5, 'label': 'Excellent 😄', 'emoji': '😄'}
     ]
 
-def get_stress_options():
-    """Get stress level options for dropdown."""
-    return [
-        {'value': 1, 'label': 'Very Relaxed 😌', 'emoji': '😌'},
-        {'value': 2, 'label': 'Calm 😊', 'emoji': '😊'},
-        {'value': 3, 'label': 'Normal 😐', 'emoji': '😐'},
-        {'value': 4, 'label': 'Stressed 😰', 'emoji': '😰'},
-        {'value': 5, 'label': 'Very Stressed 😱', 'emoji': '😱'}
-    ]
+
 
 def get_caffeine_options():
     """Get caffeine intake options for dropdown."""
@@ -392,7 +379,7 @@ def update_entry_types_for_integers():
         ('water', 'Water Intake', '💧', 'water_select', 0, 20, '8', 'Glasses of water'),
         ('energy', 'Energy Level', '⚡', 'energy_select', 1, 5, '3', 'Rate your energy level'),
         ('sleep_quality', 'Sleep Quality', '😴', 'sleep_select', 1, 5, '3', 'Rate your sleep quality'),
-        ('stress', 'Stress Level', '😰', 'stress_select', 1, 5, '1', 'Rate your stress level'),
+
         ('mood', 'Mood', '😊', 'mood_select', 1, 5, '3', 'How are you feeling overall?'),
         ('alcohol', 'Alcohol', '🍷', 'alcohol_select', 0, 10, '0', 'Number of alcoholic drinks')
     ]

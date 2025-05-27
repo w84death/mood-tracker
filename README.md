@@ -14,7 +14,7 @@ A modern, intuitive health and mood tracking application with a timeline-based i
 - **Mood tracking**: Rate your mood from 1-5
 - **Energy levels**: Track your energy throughout the day
 - **Sleep quality**: Log how well you slept
-- **Stress levels**: Monitor stress patterns
+
 - **Exercise**: Record physical activities
 - **Nutrition**: Log meals and water intake
 - **Caffeine intake**: Track coffee and other stimulants
@@ -83,7 +83,7 @@ Running:
 - **Meals** 🍽️: Describe what you ate
 - **Exercise** 🏃: Type and duration of activity
 - **Water** 💧: Glasses or bottles consumed
-- **Stress** 😰: Rate 1-5 (1=relaxed, 5=very stressed)
+
 - **Wake Up** 🌅: Mark when you woke up
 - **Bedtime** 🌙: Mark when you went to sleep
 - **Notes** 📝: General observations or thoughts

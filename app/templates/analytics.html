@@ -58,11 +58,6 @@
             <div class="stat-label">Avg Energy</div>
           </div>
           <div class="stat-card">
-            <span class="stat-emoji">😰</span>
-            <div class="stat-value" id="avgStress">-</div>
-            <div class="stat-label">Avg Stress</div>
-          </div>
-          <div class="stat-card">
             <span class="stat-emoji">🌡️</span>
             <div class="stat-value" id="avgTemp">-</div>
             <div class="stat-label">Avg Temperature</div>
@@ -95,10 +90,10 @@
             <canvas id="environmentalChart"></canvas>
           </div>
 
-          <!-- Stress vs Weather -->
+          <!-- Energy vs Weather -->
           <div class="chart-container">
-            <h3 class="chart-title">😰 Stress vs Environmental</h3>
-            <canvas id="stressEnvironmentalChart"></canvas>
+            <h3 class="chart-title">⚡ Energy vs Environmental</h3>
+            <canvas id="energyEnvironmentalChart"></canvas>
           </div>
 
           <!-- Moon Phase Correlation -->
@@ -129,7 +124,7 @@
 
       .stats-overview {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         margin-bottom: 2rem;
       }
@@ -258,7 +253,7 @@
         }
         
         .stats-overview {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
         }
         
         .chart-container {
@@ -291,7 +286,7 @@
       const dates = dailyData.map(d => d.date);
       const moods = dailyData.map(d => d.avg_mood);
       const energies = dailyData.map(d => d.avg_energy);
-      const stress = dailyData.map(d => d.avg_stress);
+
       const sleepQuality = dailyData.map(d => d.sleep_quality);
       const temperatures = dailyData.map(d => d.temperature);
       const humidity = dailyData.map(d => d.humidity);
@@ -302,15 +297,14 @@
       function calculateStats() {
         const validMoods = moods.filter(m => m !== null);
         const validEnergies = energies.filter(e => e !== null);
-        const validStress = stress.filter(s => s !== null);
+
         const validTemps = temperatures.filter(t => t !== null);
 
         document.getElementById('avgMood').textContent = validMoods.length ? 
           (validMoods.reduce((a, b) => a + b, 0) / validMoods.length).toFixed(1) + '/5' : 'N/A';
         document.getElementById('avgEnergy').textContent = validEnergies.length ? 
           (validEnergies.reduce((a, b) => a + b, 0) / validEnergies.length).toFixed(1) + '/5' : 'N/A';
-        document.getElementById('avgStress').textContent = validStress.length ? 
-          (validStress.reduce((a, b) => a + b, 0) / validStress.length).toFixed(1) + '/5' : 'N/A';
+
         document.getElementById('avgTemp').textContent = validTemps.length ? 
           (validTemps.reduce((a, b) => a + b, 0) / validTemps.length).toFixed(1) + '°C' : 'N/A';
       }
@@ -584,21 +578,21 @@
           }
         });
 
-        // Stress vs Environmental
-        const pressureStressData = dailyData.filter(d => d.air_pressure && d.avg_stress);
-        const pressureRange = getDataRange(pressureStressData.map(d => d.air_pressure), 980, 1040);
+        // Energy vs Environmental
+        const pressureEnergyData = dailyData.filter(d => d.air_pressure && d.avg_energy);
+        const pressureRange = getDataRange(pressureEnergyData.map(d => d.air_pressure), 980, 1040);
         
-        new Chart(document.getElementById('stressEnvironmentalChart'), {
+        new Chart(document.getElementById('energyEnvironmentalChart'), {
           type: 'scatter',
           data: {
             datasets: [{
-              label: 'Air Pressure vs Stress',
-              data: pressureStressData.map(d => ({
+              label: 'Air Pressure vs Energy',
+              data: pressureEnergyData.map(d => ({
                 x: d.air_pressure,
-                y: d.avg_stress
+                y: d.avg_energy
               })),
-              backgroundColor: 'rgba(239, 68, 68, 0.6)',
-              borderColor: '#ef4444',
+              backgroundColor: 'rgba(245, 158, 11, 0.6)',
+              borderColor: '#f59e0b',
               pointRadius: 6,
               pointHoverRadius: 8
             }]
@@ -628,7 +622,7 @@
                 },
                 title: {
                   display: true,
-                  text: 'Stress Level (1-5)'
+                  text: 'Energy Level (1-5)'
                 },
                 grid: {
                   color: 'rgba(0, 0, 0, 0.1)'
@@ -751,20 +745,22 @@
           }
         }
 
-        // Air pressure correlation
-        const pressureStressData = dailyData.filter(d => d.air_pressure && d.avg_stress);
-        if (pressureStressData.length > 5) {
-          const highPressure = pressureStressData.filter(d => d.air_pressure > 1020).map(d => d.avg_stress);
-          const lowPressure = pressureStressData.filter(d => d.air_pressure < 1000).map(d => d.avg_stress);
+        // Air pressure correlation with energy
+        const pressureEnergyData = dailyData.filter(d => d.air_pressure && d.avg_energy);
+        if (pressureEnergyData.length > 5) {
+          const highPressure = pressureEnergyData.filter(d => d.air_pressure > 1020).map(d => d.avg_energy);
+          const lowPressure = pressureEnergyData.filter(d => d.air_pressure < 1000).map(d => d.avg_energy);
           
           if (highPressure.length > 0 && lowPressure.length > 0) {
             const highAvg = highPressure.reduce((a, b) => a + b) / highPressure.length;
             const lowAvg = lowPressure.reduce((a, b) => a + b) / lowPressure.length;
             
-            if (lowAvg > highAvg + 0.3) {
+            if (Math.abs(highAvg - lowAvg) > 0.3) {
+              const better = highAvg > lowAvg ? 'high' : 'low';
+              const diff = Math.abs(highAvg - lowAvg);
               insights.push({
-                title: '🌀 Barometric Pressure',
-                text: `Low air pressure days (<1000 hPa) are associated with ${(lowAvg - highAvg).toFixed(1)} points higher stress levels.`
+                title: '🌀 Barometric Pressure & Energy',
+                text: `Your energy levels tend to be ${diff.toFixed(1)} points ${highAvg > lowAvg ? 'higher' : 'lower'} on ${better} air pressure days.`
               });
             }
           }

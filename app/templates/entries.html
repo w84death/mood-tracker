@@ -171,21 +171,6 @@
                 <div class="metric-value">{{ entry.sleep_quality }}/5</div>
                 <div class="metric-label">Sleep</div>
               </div>
-              {% endif %} {% if entry.avg_stress %}
-              <div
-                class="metric-card {{ 'poor' if entry.avg_stress >= 4 else 'average' if entry.avg_stress >= 3 else 'good' if entry.avg_stress >= 2 else 'excellent' }}"
-              >
-                <span class="metric-emoji">😰</span>
-                <div class="metric-value">
-                  {{ entry.avg_stress|round(1) }}/5
-                </div>
-                <div class="metric-label">Avg Stress</div>
-                {% if entry.stress_values|length > 1 %}
-                <div class="metric-detail">
-                  {{ entry.stress_values|length }} entries
-                </div>
-                {% endif %}
-              </div>
               {% endif %}
             </div>
 
